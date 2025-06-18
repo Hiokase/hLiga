@@ -1,14 +1,9 @@
 name: Build e Release do Plugin
 
-# Permissões mínimas para que o GITHUB_TOKEN possa criar Releases
-permissions:
-  contents: read     # permite checkout e leitura de código
-  releases: write    # permite criação/atualização de GitHub Releases
-
 on:
   push:
     tags:
-      - 'v*'         # dispara em qualquer tag iniciada por "v"
+      - 'v*'
 
 jobs:
   build:
@@ -16,10 +11,10 @@ jobs:
 
     steps:
       - name: Baixar o código do repositório
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Instalar Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -30,14 +25,9 @@ jobs:
       - name: Compilar o projeto
         run: ./gradlew build
 
-      - name: Verificar artefatos gerados
-        run: ls -la build/libs/
-
       - name: Criar Release no GitHub com o JAR
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v1
         with:
-          name: Release ${{ github.ref_name }}
-          tag_name: ${{ github.ref_name }}
           files: build/libs/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
