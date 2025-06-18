@@ -1,0 +1,67 @@
+# Configurações de premiação do plugin hLiga
+# Recompensas para clãs vencedores das temporadas
+
+# Ativar sistema de premiação automática
+ativado: true
+
+# Comandos a serem executados para os clãs vencedores
+# Variáveis disponíveis para uso: 
+# {clan} = tag do clã
+# {pontos} = pontos do clã
+# {posicao} = posição no ranking (1º, 2º, etc)
+# {player} = nome do jogador (para cada membro do clã)
+
+# Recompensas por posição
+recompensas:
+  # Primeiro lugar
+  1:
+    - "broadcast &6O clã {clan} venceu a temporada com {pontos} pontos!"
+    - "give {player} diamond 64"
+    - "eco give {player} 10000"
+  
+  # Segundo lugar
+  2:
+    - "broadcast &aO clã {clan} ficou em segundo lugar com {pontos} pontos!"
+    - "give {player} diamond 32"
+    - "eco give {player} 5000"
+  
+  # Terceiro lugar
+  3:
+    - "broadcast &eO clã {clan} ficou em terceiro lugar com {pontos} pontos!"
+    - "give {player} diamond 16"
+    - "eco give {player} 2500"
+  
+  # Quarto lugar
+  4:
+    - "broadcast &7O clã {clan} ficou em quarto lugar com {pontos} pontos!"
+    - "give {player} diamond 8"
+    - "eco give {player} 1000"
+  
+  # Quinto lugar
+  5:
+    - "broadcast &7O clã {clan} ficou em quinto lugar com {pontos} pontos!"
+    - "give {player} diamond 4"
+    - "eco give {player} 500"
+
+# Recompensas especiais
+recompensas_especiais:
+  # Recompensa para todos os participantes
+  participacao:
+    - "give {player} iron_ingot 16"
+  
+  # Recompensa para clãs que atingiram certa pontuação
+  pontuacao:
+    # Recompensa para clãs com mais de 1000 pontos
+    1000:
+      - "give {player} gold_ingot 8"
+    
+    # Recompensa para clãs com mais de 5000 pontos
+    5000:
+      - "give {player} gold_ingot 16"
+      - "eco give {player} 1000"
+    
+    # Recompensa para clãs com mais de 10000 pontos
+    10000:
+      - "give {player} gold_ingot 32"
+      - "eco give {player} 2000"
+      - "give {player} enchanted_golden_apple 1"

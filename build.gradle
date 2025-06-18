@@ -1,0 +1,76 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+
+group = 'hplugins'
+version = '1.0.0'
+description = 'Sistema de ligas de clãs com temporadas e premiações'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+repositories {
+    mavenCentral()
+
+    maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+    maven { url = 'https://oss.sonatype.org/content/groups/public/' }
+
+    maven { url = 'https://jitpack.io' }
+    maven { url = 'https://repo.extendedclip.com/releases/' }
+    maven { url = 'https://repo.roinujnosde.me/releases' }
+    maven { url = 'https://maven.citizensnpcs.co/repo' }
+    maven { url = 'https://repo.codemc.io/repository/maven-public/' }
+    maven { url = 'https://repo.aikar.co/content/groups/aikar/' }
+}
+
+dependencies {
+
+    compileOnly 'org.spigotmc:spigot-api:1.21-R0.1-SNAPSHOT'
+
+    compileOnly 'org.projectlombok:lombok:1.18.32'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+
+
+    compileOnly 'com.github.RoinujNosde:SimpleClans:2.15.0'
+
+    compileOnly 'me.clip:placeholderapi:2.11.6'
+
+    compileOnly 'net.citizensnpcs:citizensapi:2.0.30-SNAPSHOT'
+
+    compileOnly 'me.filoghost.holographicdisplays:holographicdisplays-api:3.0.4'
+
+    compileOnly 'com.github.decentsoftware-eu:decentholograms:2.8.6'
+
+
+    implementation 'com.github.cryptomorin:XSeries:9.4.0'
+
+    implementation 'org.reflections:reflections:0.10.2'
+
+    implementation 'com.zaxxer:HikariCP:4.0.3'
+
+    implementation 'redis.clients:jedis:4.4.3'
+
+
+    implementation files('libs/LeafPlugins.jar')
+}
+
+processResources {
+    filesMatching('**/*.yml') {
+        expand(project.properties)
+    }
+}
+
+shadowJar {
+    minimize()
+    archiveClassifier.set('')
+
+    relocate 'com.github.cryptomorin.xseries', 'hplugins.hliga.libs.xseries'
+    relocate 'org.reflections', 'hplugins.hliga.libs.reflections'
+    relocate 'com.zaxxer.hikari', 'hplugins.hliga.libs.hikari'
+    relocate 'redis.clients.jedis', 'hplugins.hliga.libs.jedis'
+}
+
+tasks.build.dependsOn tasks.shadowJar

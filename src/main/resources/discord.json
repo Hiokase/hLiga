@@ -1,0 +1,127 @@
+{
+  "mensagens": {
+    "temporada_iniciada": {
+      "titulo": "🏆 Nova Temporada Iniciada",
+      "descricao": "Uma nova temporada de ligas de clãs foi iniciada!",
+      "cor": 3447003,
+      "campos": [
+        {
+          "nome": "Nome da Temporada",
+          "valor": "{temporada_nome}",
+          "inline": false
+        },
+        {
+          "nome": "Data de Início",
+          "valor": "{temporada_inicio}",
+          "inline": true
+        },
+        {
+          "nome": "Data de Término",
+          "valor": "{temporada_fim}",
+          "inline": true
+        },
+        {
+          "nome": "Duração",
+          "valor": "{temporada_duracao}",
+          "inline": true
+        }
+      ],
+      "rodape": "hLiga - Sistema de Ligas de Clãs",
+      "thumbnail": ""
+    },
+    "temporada_encerrada": {
+      "titulo": "🏁 Temporada Encerrada",
+      "descricao": "A temporada {temporada_nome} foi encerrada!",
+      "cor": 15158332,
+      "campos": [
+        {
+          "nome": "Período",
+          "valor": "{temporada_periodo}",
+          "inline": false
+        },
+        {
+          "nome": "Top Clãs",
+          "valor": "{top_clas}",
+          "inline": false
+        }
+      ],
+      "rodape": "hLiga - Sistema de Ligas de Clãs",
+      "thumbnail": ""
+    },
+    "pontos_adicionados": {
+      "titulo": "💰 Pontos Adicionados",
+      "descricao": "O clã **{cla_tag}** recebeu pontos!",
+      "cor": 3066993,
+      "campos": [
+        {
+          "nome": "Pontos Adicionados",
+          "valor": "**{pontos_adicionados}** {pontos_nome}",
+          "inline": true
+        },
+        {
+          "nome": "Total de Pontos",
+          "valor": "**{pontos_total}** {pontos_nome_plural}",
+          "inline": true
+        },
+        {
+          "nome": "Posição Atual",
+          "valor": "{posicao}º lugar",
+          "inline": true
+        },
+        {
+          "nome": "Motivo",
+          "valor": "{descricao}",
+          "inline": false
+        }
+      ],
+      "rodape": "hLiga - Sistema de Ligas de Clãs",
+      "thumbnail": ""
+    },
+    "pontos_removidos": {
+      "titulo": "⚠️ Pontos Removidos",
+      "descricao": "O clã **{cla_tag}** perdeu pontos!",
+      "cor": 15105570,
+      "campos": [
+        {
+          "nome": "Pontos Removidos",
+          "valor": "**{pontos_removidos}** {pontos_nome}",
+          "inline": true
+        },
+        {
+          "nome": "Total de Pontos",
+          "valor": "**{pontos_total}** {pontos_nome_plural}",
+          "inline": true
+        },
+        {
+          "nome": "Posição Atual",
+          "valor": "{posicao}º lugar",
+          "inline": true
+        },
+        {
+          "nome": "Motivo",
+          "valor": "{descricao}",
+          "inline": false
+        }
+      ],
+      "rodape": "hLiga - Sistema de Ligas de Clãs",
+      "thumbnail": ""
+    },
+    "medalhas": {
+      "primeiro": "🥇",
+      "segundo": "🥈",
+      "terceiro": "🥉"
+    },
+    "cores": {
+      "azul": 3447003,
+      "verde": 3066993,
+      "vermelho": 15158332,
+      "amarelo": 16776960,
+      "laranja": 15105570,
+      "roxo": 10181046,
+      "rosa": 15277667,
+      "preto": 0,
+      "branco": 16777215,
+      "cinza": 10197915
+    }
+  }
+}

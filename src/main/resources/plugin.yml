@@ -1,0 +1,54 @@
+name: hLiga
+version: 1.0.0
+main: hplugins.hliga.Main
+depend: [Citizens]
+softdepend: [SimpleClans, LeafPlugins, PlaceholderAPI, HolographicDisplays, DecentHolograms]
+authors: [hPlugins and Hokase]
+description: Sistema de ligas compatível com Minecraft 1.8-1.21.5 e Java 8+
+website: https://github.com/hplugins/hLiga
+folia-supported: true
+
+commands:
+  liga:
+    description: Comando principal do plugin hLiga
+    aliases: [hliga]
+    permission: hliga.command
+  temporada:
+    description: Gerencia as temporadas do sistema de ligas
+    aliases: [season]
+    permission: hliga.temporada
+
+permissions:
+  hliga.command:
+    description: Permite usar o comando /hliga
+    default: true
+  hliga.admin:
+    description: Acesso a todos os comandos administrativos
+    default: op
+  hliga.addpoints:
+    description: Permite adicionar pontos a um clã
+    default: op
+  hliga.removepoints:
+    description: Permite remover pontos de um clã
+    default: op
+  hliga.temporada:
+    description: Permite usar o comando /temporada
+    default: op
+  hliga.temporada.iniciar:
+    description: Permite iniciar uma temporada
+    default: op
+  hliga.temporada.fechar:
+    description: Permite fechar uma temporada
+    default: op
+  hliga.topnpc:
+    description: Permite usar comandos de NPCs do ranking
+    default: op
+  hliga.topnpc.create:
+    description: Permite criar NPCs do ranking
+    default: op
+  hliga.topnpc.remove:
+    description: Permite remover NPCs do ranking
+    default: op
+  hliga.topnpc.update:
+    description: Permite atualizar NPCs do ranking
+    default: op

@@ -1,0 +1,134 @@
+# Configuração principal do plugin hLiga
+# Sistema de ligas para clãs com suporte a SimpleClans
+
+# Configurações de sistema e debug
+sistema:
+  # Ativar mensagens de debug no console (true para ativar, false para desativar)
+  debug: false
+  # Nível de verbosidade das mensagens de log (1 = mínimo, 2 = normal, 3 = detalhado)
+  log_level: 2
+
+# Configurações do banco de dados
+database:
+  # Tipo de banco de dados primário: SQLITE (recomendado para servidores pequenos), MYSQL (recomendado para servidores grandes)
+  # IMPORTANTE: Redis não deve ser usado como banco primário, apenas como cache
+  type: SQLITE
+  
+  # Configurações do SQLite (banco local)
+  sqlite:
+    # Nome do arquivo do banco de dados (será criado na pasta do plugin)
+    file: "database.db"
+    # SQLite simplificado - apenas um arquivo sem configurações extras
+  
+  # Configurações do MySQL/MariaDB (banco remoto)
+  mysql:
+    host: localhost
+    port: 3306
+    database: hliga
+    username: root
+    password: password
+    useSSL: false
+    # Configurações do pool de conexões HikariCP
+    poolSize: 10
+    minIdle: 2
+    connectionTimeout: 30000
+    idleTimeout: 600000
+    maxLifetime: 1800000
+  
+  # Configurações do Redis (APENAS PARA CACHE - não é banco de dados)
+  # O Redis melhora a performance cachando dados frequentemente acessados
+  redis:
+    # Ativar cache Redis (opcional - melhora performance se disponível)
+    enabled: false
+    host: localhost
+    port: 6379
+    password: ""
+    database: 0
+    poolSize: 8
+    # TTL (Time To Live) do cache em segundos
+    cache_ttl:
+      rankings: 300    # 5 minutos
+      seasons: 1800    # 30 minutos
+      player_tags: 600 # 10 minutos
+
+clans:
+  # Plugin de clãs preferido (será usado se múltiplos estiverem disponíveis)
+  # Opções: "SimpleClans", "LeafGuilds", "auto" (seleciona automaticamente se disponível)
+  preferido: "auto"
+  # Sincronizar clãs automaticamente ao iniciar o plugin
+  sincronizar_ao_iniciar: true
+  # Intervalo de sincronização automática em minutos (0 = desativado)
+  intervalo_sincronizacao: 60
+
+
+# Configurações de economia de pontos
+pontos:
+  # Multiplicador de pontos (global)
+  multiplicador: 1.0
+  # Pontos iniciais para novos clãs
+  iniciais: 0
+  # Limite máximo de pontos (0 = sem limite)
+  maximo: 0
+  # Nome da moeda
+  nome: "pontos"
+  # Nome da moeda no plural
+  nome_plural: "pontos"
+
+# Configurações de temporadas
+temporada:
+  # Fuso horário para timestamps (formato Java TimeZone ID)
+  fuso_horario: "America/Sao_Paulo"
+  # Duração padrão da temporada em dias
+  duracao_padrao: 30
+  # Configurações de fechamento automático
+  fechamento_automatico: true
+  # Mensagem de anúncio quando fechar a temporada
+  anuncio_fechamento: true
+  # Resetar pontos ao fechar uma temporada
+  resetar_pontos: true
+  # Tempo em minutos para avisar antes do fechamento
+  avisos_previos: [60, 30, 15, 5, 1]
+
+# Configurações do Discord
+discord:
+  # Ativar integração com Discord
+  ativado: true
+  
+  # === WEBHOOKS SEPARADOS ===
+  # URL do webhook principal para temporadas (formato: https://discord.com/api/webhooks/ID/TOKEN)
+  # Obtenha esta URL no Discord: Configurações do Servidor -> Integrações -> Webhooks -> Novo Webhook
+  webhook_url: "https://discord.com/api/webhooks/COLOQUE_ID_AQUI/COLOQUE_TOKEN_AQUI"
+
+  # URL do webhook para logs de pontos (apenas staff)
+  # Este webhook será usado apenas para notificações de pontos adicionados/removidos
+  staff_webhook_url: "https://discord.com/api/webhooks/COLOQUE_ID_STAFF_AQUI/COLOQUE_TOKEN_STAFF_AQUI"
+  
+  # Nome do bot no Discord (o nome que aparecerá quando enviar mensagens)
+  bot_name: "hLiga"
+  # Avatar do bot - URL da imagem (opcional)
+  bot_avatar: ""
+  # Cor da barra lateral das mensagens (decimal) - 3066993 = Verde, 15158332 = Vermelho, 3447003 = Azul
+  cor: 3066993
+  
+  # === CONFIGURAÇÕES DE NOTIFICAÇÕES ===
+  # Enviar mensagem quando um clã ganhar pontos (usando webhook de staff)
+  anunciar_pontos: true
+  # Quantidade mínima de pontos para anunciar
+  minimo_pontos_anuncio: 100
+  # Enviar mensagem quando uma temporada começar/terminar (usando webhook principal)
+  anunciar_temporadas: true
+  # Enviar resultados ao final da temporada (usando webhook principal)
+  anunciar_resultados: true
+  # Número de clãs no top a serem anunciados
+  top_resultados: 5
+  # Os modelos de mensagens e formatação avançada estão no arquivo discord.json
+
+# Configurações visuais
+visual:
+  # Prefixo nas mensagens do plugin
+  prefixo: "&8[&6hLiga&8] &r"
+  # Usar placeholders no chat (requer PlaceholderAPI)
+  placeholders_chat: true
+  # Exibir todos os clãs ou apenas aqueles com pontos
+  mostrar_todos_clans: true
+

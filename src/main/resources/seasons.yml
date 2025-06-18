@@ -1,0 +1,21 @@
+# ==========================================
+#        CONFIGURAÇÃO DE TEMPORADA
+# ==========================================
+# Arquivo para criar uma temporada automaticamente
+# ao iniciar o servidor
+# ==========================================
+
+temporada:
+  ativa: false                        # true = criar temporada ao iniciar servidor
+  nome: "Temporada de Teste"          # Nome da temporada
+  
+  # DATAS (formato: YYYY-MM-DD HH:MM)
+  inicio: "2025-06-02 18:00"          # Data e hora de início
+  termino: "2025-06-09 18:00"         # Data e hora de término
+  
+  # CONFIGURAÇÕES
+  resetar_pontos: true                # Resetar pontos ao iniciar
+  avisos_previos: [60, 30, 15, 5, 1]  # Avisos antes do fim (em minutos)
+  
+  # INTERNO (não editar)
+  processada: false

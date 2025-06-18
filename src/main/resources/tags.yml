@@ -1,0 +1,56 @@
+# ===============================================================
+# SISTEMA DE TAGS - hLiga v2.0
+# ===============================================================
+
+# Configurações gerais
+sistema:
+  ativado: true
+  atualizacao_automatica: true
+  intervalo_verificacao: 5
+  
+  # Modo de aplicação das tags de ranking:
+  # "temporada" - Só aplica durante temporadas ativas
+  # "normal" - Aplica sempre que houver clãs com pontos
+  modo: "normal"
+
+# Tags temporárias (durante temporada ativa)
+# Baseadas na posição atual do clã no ranking
+tags_ranking:
+  1: "&6&l[TOP1]"
+  2: "&e&l[TOP2]"
+  3: "&c&l[TOP3]"
+  4: "&9&l[TOP4]"
+  5: "&a&l[TOP5]"
+
+# Tags permanentes (após temporada terminar)
+tags_temporada:
+  # Quantas posições ganham tag permanente
+  posicoes_premiadas: 3
+  
+  # Formato das tags (usa {temporada} para nome/número)
+  formatos:
+    1: "&6&l{temporada}"
+    2: "&e&l{temporada}"
+    3: "&c&l{temporada}"
+  
+  # Configurações de exibição
+  max_mostrar: 3
+  ordem: "RECENTE"
+
+# Placeholders disponíveis
+placeholders:
+  # Apenas tags temporárias (ranking atual)
+  temporaria:
+    placeholder: "hliga_tag_ranking"
+    formato: "{temporaria}"
+    
+  # Apenas tags permanentes (temporada)
+  permanentes:
+    placeholder: "hliga_tag_permanentes"
+    formato: "{permanentes}"
+
+# Mensagens
+mensagens:
+  tag_recebida: "&aVocê recebeu a tag: {tag}"
+  tag_removida: "&cSua tag foi removida: {tag}"
+  tag_permanente_ganha: "&6Parabéns! Você ganhou a tag permanente: {tag}"

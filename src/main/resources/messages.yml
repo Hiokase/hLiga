@@ -1,0 +1,451 @@
+# ============================================
+# ARQUIVO DE MENSAGENS - HLIGA PLUGIN
+# ============================================
+# 
+# COMO EDITAR:
+# - Altere apenas o texto após os dois pontos (:)
+# - Para linhas múltiplas use o formato de lista (- "texto")
+# - Para linha em branco use: - ""
+#
+# VARIÁVEIS:
+# {clan} {pontos} {jogador} {posicao} etc. - São substituídas automaticamente
+# ============================================
+
+# ============================
+# MENSAGENS GERAIS
+# ============================
+geral:
+  sem_permissao: "&c[X] &fVocê não tem permissão para usar este comando."
+  somente_jogador: "&c[X] &fEste comando só pode ser usado por jogadores."
+  comando_inexistente: "&c[X] &fComando não encontrado. Use &e/liga help &fpara ver os comandos."
+  jogador_nao_encontrado: "&c[X] &fJogador não encontrado ou nunca entrou no servidor."
+  recarregado: "&a[OK] &fPlugin recarregado com sucesso!"
+  reload_completo: "&a[OK] &fPlugin recarregado completamente!"
+  erro_interno: "&c[X] &fErro interno do sistema. Contate um administrador."
+  clan_nao_encontrado: "&c[X] &fClã não encontrado."
+  formato_invalido: "&c[X] &fFormato inválido. Use números."
+  valor_invalido: "&c[X] &fValor inválido."
+  formato_hora_invalido: "&c[X] &fFormato de hora inválido. Use: dd/MM/yyyy HH:mm"
+  hora_invalida: "&c[X] &fHora inválida."
+
+# ============================
+# SISTEMA DE PAGINAÇÃO
+# ============================
+ajuda_paginacao:
+  info: "&7Página {pagina_atual} de {total_paginas}"
+  anterior: "&c< Anterior"
+  proxima: "&aProxima >"
+  # Número de linhas por página nos comandos de help
+  linhas_por_pagina: 10
+
+# ============================
+# SISTEMA DE AJUDA
+# ============================
+ajuda:
+  principal:
+    - ""
+    - "&6&l⚡ hLiga &e&lComandos"
+    - ""
+    - "&a▸ &fComandos Básicos:"
+    - "  &7• &f/liga help [página] &8- &7Mostrar esta ajuda"
+    - "  &7• &f/liga top [página] &8- &7Ver ranking de clãs"
+    - "  &7• &f/liga menu &8- &7Abrir menu principal"
+    - "  &7• &f/liga tag &8- &7Comandos de tags pessoais"
+    - ""
+    - "&c▸ &fComandos Administrativos:"
+    - "  &7• &c/liga reload &8- &7Recarregar plugin"
+    - "  &7• &c/liga addpoints <clã> <pontos> &8- &7Adicionar pontos"
+    - "  &7• &c/liga removepoints <clã> <pontos> &8- &7Remover pontos"
+    - "  &7• &c/liga season start <nome> <dias> &8- &7Iniciar temporada"
+    - "  &7• &c/liga season end &8- &7Encerrar temporada"
+    - "  &7• &c/liga season info &8- &7Info da temporada"
+    - "  &7• &c/liga topnpc create <id> <pos> &8- &7Criar NPC ranking"
+    - "  &7• &c/liga topnpc remove <id> &8- &7Remover NPC"
+    - "  &7• &c/liga sync <origem> <destino> &8- &7Sincronizar dados"
+    - ""
+
+  temporada:
+    - ""
+    - "&6&l⚡ Temporada &e&lComandos"
+    - ""
+    - "&a▸ &fComandos Básicos:"
+    - "  &7• &f/temporada info &8- &7Ver informações da temporada atual"
+    - "  &7• &f/temporada historico &8- &7Ver histórico de temporadas"
+    - "  &7• &f/temporada help [página] &8- &7Mostrar esta ajuda"
+    - ""
+    - "&c▸ &fComandos Administrativos:"
+    - "  &7• &c/temporada iniciar <nome> [dias|DD/MM/AAAA] [HH:MM] &8- &7Iniciar nova temporada"
+    - "  &7• &c/temporada fechar &8- &7Finalizar temporada com recompensas"
+    - "  &7• &c/temporada stop &8- &7Parar temporada sem recompensas"
+    - ""
+
+# ============================
+# HISTÓRICO DE TEMPORADAS
+# ============================
+historico_temporadas:
+  - ""
+  - "&6&l[LIGA] Histórico de Temporadas"
+  - ""
+  - "&e{temporadas_lista}"
+  - ""
+
+# ============================
+# SISTEMA DE COMANDOS
+# ============================
+sistema:
+  tags_atualizadas:
+    - "&a[OK] &fTags de ranking atualizadas!"
+    - "&7Rankings recalculados com sucesso."
+
+  jogador_nao_encontrado_comando:
+    - "&c[X] &fJogador não encontrado."
+    - "&7Use o nome exato do jogador."
+
+  sem_tags:
+    - "&c[X] &fEste jogador não possui tags."
+    - "&7Nenhuma tag foi encontrada."
+
+  tags_de_jogador:
+    - ""
+    - "&6&l[LIGA] Tags do Jogador: &e{jogador}"
+    - ""
+    - "&e{lista_tags}"
+    - ""
+
+# ============================
+# AJUDA DE TAGS
+# ============================
+tags:
+  sistema_desabilitado: "&c[X] &fSistema de tags está desabilitado."
+  tag_ativada: "&a[OK] &fTag ativada: {tag}"
+  tag_desativada: "&a[OK] &fTag desativada."
+  sem_tags: "&c[X] &fVocê não possui nenhuma tag."
+
+  ajuda:
+    - ""
+    - "&6&l[LIGA] Comandos de Tags"
+    - ""
+    - "&e/liga tag ativar &7- Ativar sistema de tags"
+    - "&e/liga tag desativar &7- Desativar sistema de tags"
+    - "&e/liga tag <jogador> &7- Ver tags de um jogador"
+    - ""
+
+  sistema:
+    ja_ativado: "&c[X] &fSistema de tags já está ativado."
+    ja_desativado: "&c[X] &fSistema de tags já está desativado."
+    ativado:
+      - "&a[OK] &fSistema de tags ativado!"
+      - "&7Suas tags agora aparecerão no chat."
+    desativado:
+      - "&c[OK] &fSistema de tags desativado!"
+      - "&7Suas tags não aparecerão mais no chat."
+    limpo:
+      - "&a[OK] &fTags de ranking limpas!"
+      - "&7Todas as tags de ranking foram removidas."
+    tags_atualizadas:
+      - "&a[OK] &fTags de ranking atualizadas!"
+      - "&7Rankings recalculados com sucesso."
+    jogador_nao_encontrado_comando:
+      - "&c[X] &fJogador não encontrado."
+      - "&7Use o nome exato do jogador."
+
+  # Lista de tags do jogador
+  lista_jogador:
+    - ""
+    - "&6&l[LIGA] Suas Tags"
+    - ""
+    - "&e> &fTags ativas: &a{lista_tags}"
+    - ""
+
+# ============================
+# SISTEMA DE SINCRONIZAÇÃO
+# ============================
+database_sync:
+  ajuda:
+    - ""
+    - "&6&l[LIGA] Comandos de Sincronização"
+    - ""
+    - "&e/liga sync reload &7- Recarregar configurações"
+    - "&e/liga sync database &7- Sincronizar banco de dados"
+    - "&e/liga sync cache &7- Limpar cache"
+    - ""
+    - ""
+    - "&e/liga sync <origem> <destino> &7- Sincronizar dados"
+    - "&7Tipos: sqlite, mysql, redis"
+    - ""
+
+# ============================
+# SISTEMA DE PONTOS
+# ============================
+pontos:
+  adicionados: "&a+ &f{pontos} pontos adicionados para o clã &e{clan}&f!"
+  removidos: "&c- &f{pontos} pontos removidos do clã &e{clan}&f!"
+  sem_clan: "&c[X] &fVocê não está em nenhum clã."
+  clan_nao_encontrado: "&c[X] &fClã não encontrado."
+  insuficientes: "&c[X] &fO clã não possui pontos suficientes."
+
+  # Mensagens para administradores
+  adicionado_admin: "&a[OK] &f{pontos} pontos adicionados para o clã &e{clan}&f!"
+  adicionado_admin_desc: "&a[OK] &f{pontos} pontos adicionados para o clã &e{clan}&f!\n&7Motivo: &f{descricao}"
+  removido_admin: "&c[OK] &f{pontos} pontos removidos do clã &e{clan}&f!"
+  removido_admin_desc: "&c[OK] &f{pontos} pontos removidos do clã &e{clan}&f!\n&7Motivo: &f{descricao}"
+
+  # Mensagens para membros do clã
+  adicionado_clan: "&a+ &f{pontos} pontos para seu clã!"
+  adicionado_clan_desc: "&a+ &f{pontos} pontos para seu clã!\n&7Motivo: &f{descricao}"
+  removido_clan: "&c- &f{pontos} pontos do seu clã!"
+  removido_clan_desc: "&c- &f{pontos} pontos do seu clã!\n&7Motivo: &f{descricao}"
+
+  # Informações dos pontos
+  info: "&e> &fPontos do clã: &a{pontos}"
+
+# ============================
+# SISTEMA DE CLÃS
+# ============================
+clans:
+  lista_vazia: "&c[X] &fNão há clãs registrados."
+  top_vazio: "&c[X] &fNão há clãs com pontos registrados."
+  top_pagina_invalida: "&c[X] &fPágina inválida. Use um número maior que 0."
+
+  # Cabeçalho do ranking de clãs (customize como quiser)
+  top_header:
+    - ""
+    - "&6&l[LIGA] Ranking de Clãs"
+    - ""
+
+  # Formato de cada linha do ranking
+  # Variáveis: {posicao} {tag_colorida} {nome} {pontos} {membros} {lider}
+  top_linha:
+    - "&e{posicao}º &f{tag_colorida} &8- &6{pontos} pontos"
+
+  # Paginação para ranking de clãs
+  top_paginacao:
+    info: "&7Página {pagina_atual} de {total_paginas}"
+    anterior: "&c< Anterior"
+    proxima: "&aProxima >"
+
+# ============================
+# MENUS DE CLÃS
+# ============================
+menu_clans:
+  - ""
+  - "&6&l[LIGA] Informações do Clã"
+  - ""
+  - "&e> &fNome: &a{nome}"
+  - "&e> &fTag: {tag}"
+  - "&e> &fPontos: &6{pontos}"
+  - "&e> &fMembros: &b{membros}"
+  - "&e> &fPosição: &e#{posicao}"
+  - ""
+
+clan_info:
+  - "&6⊱━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⊰"
+  - "&e  &l❯❯ &b&lTOP CLÃ - POSIÇÃO #{posicao} &e&l❮❮"
+  - ""
+  - "&e ➤ &fNome: &a{nome}"
+  - "&e ➤ &fPontos: &6{pontos}"
+  - "&e ➤ &fMembros: &b{membros}"
+  - "&e ➤ &fLíder: &d{lider}"
+  - ""
+  - "{mensagem_especial}"
+  - ""
+  - "&7  Use &f/liga clan {tag} &7para mais detalhes"
+  - "&6⊱━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⊰"
+
+
+
+# ============================
+# SISTEMA DE TEMPORADAS
+# ============================
+temporada:
+  nao_encontrada: "&c[X] &fNenhuma temporada ativa encontrada."
+  nao_ativa: "&c[X] &fNenhuma temporada ativa encontrada."
+  ja_ativa: "&c[X] &fJá existe uma temporada ativa."
+  criada: "&a[OK] &fTemporada &e{nome} &fcriada com sucesso!"
+  iniciada: "&a[OK] &fTemporada &e{nome} &finiciada com sucesso!"
+  finalizada: "&a[OK] &fTemporada finalizada! Vencedor: &e{vencedor}"
+  fechada: "&a[OK] &fTemporada &e{nome} &ffechada com sucesso!"
+  sem_historico: "&c[X] &fNenhuma temporada encontrada no histórico."
+  recompensas_distribuidas: "&a[OK] &fRecompensas distribuídas aos vencedores!"
+
+  # Informações da temporada atual
+  info_ativa:
+    - "&6&l[LIGA] Temporada Atual"
+    - ""
+    - "&e> &fNome: &a{nome}"
+    - "&e> &fStatus: &aATIVA"
+    - "&e> &fInício: &f{data_inicio}"
+    - "&e> &fFim: &f{data_fim}"
+    - "&e> &fTempo restante: &e{tempo_restante}"
+
+  info: "&6&l[LIGA] Temporada Atual\n&e> &fNome: &a{nome}\n&e> &fInício: &f{inicio}\n&e> &fTérmino: &f{termino}\n&e> &fTempo restante: &e{restante}"
+
+  # Mensagens para encerramento forçado
+  stop:
+    - "&a[OK] &fTemporada encerrada sem recompensas."
+    - ""
+    - "&6&l[LIGA] Temporada Encerrada"
+    - ""
+    - "&e> &fNome: &a{nome}"
+    - "&e> &fStatus: &cENCERRADA"
+    - "&e> &fDuração: &f{duracao}"
+    - ""
+    - "&e> &fPontuação Final:"
+    - "&7{posicao}º &f{tag} &8- &6{pontos} pontos"
+    - ""
+    - "&7Temporada encerrada por um administrador"
+
+  # Mensagens de início de temporada
+  inicio:
+    chat:
+      - ""
+      - "&6&l[LIGA] Temporada Iniciada!"
+      - ""
+      - "&e> &fNome: &a{nome}"
+      - "&e> &fInício: &f{data_inicio}"
+      - "&e> &fFim: &f{data_fim}"
+      - "&e> &fDuração: &b{duracao} dias"
+      - ""
+      - "&aBoa sorte a todos os clãs!"
+      - ""
+    actionbar: "&6[LIGA] &eTemporada {nome} iniciada!"
+
+  # Mensagens de fim de temporada
+  fim:
+    chat:
+      - ""
+      - "&6&l[LIGA] Temporada Finalizada!"
+      - ""
+      - "&e> &fNome: &a{nome}"
+      - "&e> &fDuração: &f{duracao} dias"
+      - "&e> &fVencedor: &6{vencedor}"
+      - "&e> &fPontos: &b{pontos_vencedor}"
+      - ""
+      - "&6Ranking Final:"
+      - "{ranking_final}"
+      - ""
+      - "&aParabéns aos vencedores!"
+      - ""
+    actionbar: "&6[LIGA] &eTemporada {nome} finalizada!"
+    linha_ranking: "&e{posicao}º &f{tag} &8- &6{pontos} pontos"
+    sem_clans: "&7Nenhum clã participou desta temporada."
+
+  # Mensagens adicionais
+  aviso_fechamento: "&c[!] &fTemporada será finalizada em breve!"
+  sem_vencedor: "&7Nenhum vencedor definido para esta temporada."
+
+
+
+# ============================
+# SISTEMA DE PREMIAÇÃO
+# ============================
+premiacao:
+  distribuida: "&a[OK] &fRecompensas distribuídas aos vencedores da temporada!"
+
+# ============================
+# SISTEMA DE ERROS
+# ============================
+erros:
+  erro_clique: "&c[X] &fErro ao processar clique."
+  erro_interno: "&c[X] &fErro interno do sistema."
+  item_erro: "&c[X] &fErro ao criar item."
+  menu_temporada_config: "&c[X] &fErro na configuração do menu de temporada."
+
+# ============================
+# MENUS
+# ============================
+menu_temporada:
+  sem_temporada: "&c[X] &fNenhuma temporada ativa."
+  tempo_finalizada: "&c[X] &fTemporada já finalizada."
+  info_temporada_ativa:
+    - ""
+    - "&6&l[LIGA] Informações da Temporada"
+    - ""
+    - "&e> &fNome: &a{nome}"
+    - "&e> &fInício: &f{inicio}"
+    - "&e> &fTérmino: &f{termino}"
+    - "&e> &fTempo Restante: &6{tempo_restante}"
+    - "&e> &fTotal de Clãs: &b{total_clans}"
+    - ""
+
+
+
+# ============================
+# TÍTULOS DE TEMPORADA
+# ============================
+titulos_temporada:
+  inicio_titulo: "&6Liga Iniciada!"
+  inicio_subtitulo: "&eNova temporada começou"
+  finalizada_titulo: "&cLiga Finalizada!"
+  finalizada_subtitulo: "&7Temporada encerrada"
+  vitoria_titulo: "&6Vitória!"
+  vitoria_subtitulo: "&eSeu clã venceu a temporada!"
+  inicio:
+    titulo: "&6&lTEMPORADA INICIADA!"
+    subtitulo: "&e{nome_temporada}"
+  fim:
+    titulo: "&c&lTEMPORADA FINALIZADA!"
+    subtitulo: "&7Vencedor: &e{vencedor}"
+  vitoria:
+    titulo: "&6&l✦ CAMPEÕES! ✦"
+    subtitulo: "&eParabéns {nome_clan}!"
+
+# ============================
+# SISTEMA DE NPCs
+# ============================
+npcs:
+  criado: "&a[OK] &fNPC de ranking criado com sucesso!"
+  removido: "&a[OK] &fNPC de ranking removido com sucesso!"
+  erro_criacao: "&c[X] &fErro ao criar NPC. Verifique se o Citizens está instalado."
+  nao_encontrado: "&c[X] &fNPC não encontrado."
+  sem_citizens: "&c[X] &fPlugin Citizens não encontrado. Instale para usar NPCs."
+  atualizado: "&a[OK] &fNPC {id} atualizado com sucesso!"
+  todos_atualizados: "&a[OK] &fTodos os NPCs foram atualizados!"
+  posicao_invalida: "&c[X] &fPosição deve ser entre 1 e 100."
+  ja_existe: "&c[X] &fJá existe um NPC com o ID {id}."
+  lista_vazia: "&c[X] &fNenhum NPC de ranking encontrado."
+  lista_header: "&6&l[LIGA] Lista de NPCs de Ranking"
+  lista_footer: "&7Use /liga topnpc remove <id> para remover."
+  erro_atualizar: "&c[X] &fErro ao atualizar NPC {id}."
+
+  # Mensagens de ajuda para NPCs
+  ajuda:
+    - ""
+    - "&6&l[LIGA] NPCs de Ranking &e&lComandos"
+    - ""
+    - "&a> &fComandos Disponíveis:"
+    - "&7• &f/liga topnpc create <id> <posição> &8- &7Criar NPC"
+    - "&7• &f/liga topnpc remove <id> &8- &7Remover NPC"
+    - "&7• &f/liga topnpc list &8- &7Listar NPCs"
+    - "&7• &f/liga topnpc update [id] &8- &7Atualizar NPCs"
+    - ""
+
+
+
+
+
+
+
+
+
+# Mensagens especiais para posições no ranking
+mensagens_especiais:
+  primeiro: "&6  &l✰ CAMPEÃO DA TEMPORADA! ✰"
+  segundo: "&f  &l✦ VICE-CAMPEÃO DA TEMPORADA! ✦"
+  terceiro: "&e  &l✧ TERCEIRO LUGAR DA TEMPORADA! ✧"
+
+# ============================
+# MENUS INTERATIVOS
+# ============================
+menu_top_clans:
+  erro_config: "&c[X] &fErro: Configuração do menu de top clãs não encontrada!"
+  podio_info:
+    - "&6⊱━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⊰"
+    - "&e          &l❯❯ PÓDIO DOS CLÃS ❮❮"
+    - ""
+    - "&6&l1º LUGAR: &r{primeiro_clan}"
+    - "&f&l2º LUGAR: &r{segundo_clan}"
+    - "&e&l3º LUGAR: &r{terceiro_clan}"
+    - ""
+    - "&7Clique nos itens para mais informações!"
+    - "&6⊱━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⊰"

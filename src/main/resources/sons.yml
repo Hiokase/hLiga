@@ -1,0 +1,74 @@
+# Configurações de sons do plugin hLiga
+# Todos os sons usam o formato do Bukkit Sound Enum
+
+# Sons para temporadas
+temporada:
+  # Som ao iniciar uma temporada
+  inicio:
+    nome: "ENTITY_PLAYER_LEVELUP"
+    volume: 1.0
+    pitch: 0.5
+  
+  # Som ao finalizar uma temporada
+  fim:
+    nome: "ENTITY_ENDER_DRAGON_DEATH"
+    volume: 1.5
+    pitch: 0.8
+  
+  # Som para avisos de temporada
+  aviso:
+    nome: "BLOCK_NOTE_BLOCK_PLING"
+    volume: 1.0
+    pitch: 1.2
+
+# Sons para pontos
+pontos:
+  # Som ao adicionar pontos
+  adicionar:
+    nome: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    volume: 0.8
+    pitch: 1.0
+  
+  # Som ao remover pontos
+  remover:
+    nome: "ENTITY_ITEM_BREAK"
+    volume: 0.8
+    pitch: 0.8
+
+# Sons para menus
+menu:
+  # Som ao abrir um menu
+  abrir:
+    nome: "BLOCK_CHEST_OPEN"
+    volume: 0.5
+    pitch: 1.2
+  
+  # Som ao clicar em um item
+  clique:
+    nome: "UI_BUTTON_CLICK"
+    volume: 0.5
+    pitch: 1.0
+  
+  # Som ao fechar um menu
+  fechar:
+    nome: "BLOCK_CHEST_CLOSE"
+    volume: 0.5
+    pitch: 1.2
+
+# Sons para recompensas
+recompensas:
+  # Som ao distribuir recompensas
+  distribuir:
+    nome: "ENTITY_PLAYER_LEVELUP"
+    volume: 1.2
+    pitch: 0.6
+  # Som para clã vencedor de temporada
+  vencedor:
+    nome: "ENTITY_FIREWORK_ROCKET_TWINKLE"
+    volume: 1.5
+    pitch: 0.7
+  # Som para anúncio de recompensas
+  anuncio:
+    nome: "ENTITY_FIREWORK_ROCKET_LARGE_BLAST"
+    volume: 1.2
+    pitch: 0.5

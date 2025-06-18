@@ -1,0 +1,38 @@
+configuracoes:
+  # Intervalo de atualização automática dos NPCs (em minutos - horário real)
+  # Exemplo: 5 = atualiza a cada 5 minutos no relógio
+  # Se colocar 1, atualiza a cada 1 minuto real
+  # Se colocar 10, atualiza a cada 10 minutos reais
+  intervalo_atualizacao: 5
+
+# Configurações de ranking/top
+top:
+  # Quantidade de clãs a serem exibidos no ranking
+  quantidade: 5
+  # Quantidade máxima de clãs no top geral
+  maximo: 10
+
+# Configurações do sistema de NPCs (Citizens2)
+npc:
+  # Configurações de skin dos NPCs
+  skin:
+    # Nome do jogador padrão para quando não há líder no topo
+    jogador_padrao: "MHF_Question"
+    
+    # Se true, usa skin do líder do clã quando há um clã no topo
+    # Se false, sempre usa o jogador_padrao
+    usar_skin_lider: true
+
+# Configurações dos hologramas que aparecem acima dos NPCs
+holograma:
+  linhas:
+    - '&6Top #{posicao}'
+    - '{tag} - &e{pontos} pontos'
+    - '&fLíder: &e{lider}'
+  vazio:
+    tag: '&c&lNenhum Clan'
+    lider: '&7[Aguardando]'
+    pontos: '0'
+
+# Posições dos NPCs criados (gerenciado automaticamente)
+npc_positions: {}
