@@ -1,5 +1,9 @@
 name: Build e Release do Plugin
 
+permissions:
+  contents: read
+  releases: write
+
 on:
   push:
     tags:
@@ -28,6 +32,7 @@ jobs:
       - name: Criar Release no GitHub com o JAR
         uses: softprops/action-gh-release@v1
         with:
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
           files: build/libs/*.jar
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
