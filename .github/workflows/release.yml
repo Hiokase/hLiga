@@ -1,13 +1,14 @@
+# Permissões mínimas para criar GitHub Releases
 permissions:
-  contents: read
-  releases: write
+  contents: read     # permite checkout e leitura de código
+  releases: write    # permite criação/atualização de Releases
 
 name: Build e Release do Plugin
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*'  # dispara em qualquer tag iniciada por "v"
 
 jobs:
   build:
