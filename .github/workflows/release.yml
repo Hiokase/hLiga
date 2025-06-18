@@ -1,3 +1,7 @@
+permissions:
+  contents: read
+  releases: write
+
 name: Build e Release do Plugin
 
 on:
@@ -25,9 +29,14 @@ jobs:
       - name: Compilar o projeto
         run: ./gradlew build
 
+      - name: Verificar artefatos gerados
+        run: ls -la build/libs/
+
       - name: Criar Release no GitHub com o JAR
         uses: softprops/action-gh-release@v2
         with:
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
           files: build/libs/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
