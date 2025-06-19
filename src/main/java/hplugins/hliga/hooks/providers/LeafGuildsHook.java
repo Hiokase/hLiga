@@ -33,16 +33,16 @@ public class LeafGuildsHook extends BaseClanProvider {
 
     private void initialize() {
         try {
-            LogUtils.info("LeafGuildsHook - initialize: Tentando inicializar hook do LeafGuilds...");
+            LogUtils.debug("LeafGuildsHook - initialize: Tentando inicializar hook do LeafGuilds...");
             boolean pluginPresent = Bukkit.getPluginManager().getPlugin("LeafPlugins") != null;
-            LogUtils.info("LeafGuildsHook - initialize: Plugin LeafGuilds está carregado? " + pluginPresent);
+            LogUtils.debugMedium("LeafGuildsHook - initialize: Plugin LeafGuilds está carregado? " + pluginPresent);
 
             if (!pluginPresent) {
-                LogUtils.warning("LeafGuildsHook - initialize: LeafGuilds não encontrado. A integração não será carregada.");
+                LogUtils.debugMedium("LeafGuildsHook - initialize: LeafGuilds não encontrado. A integração não será carregada.");
                 return;
             }
             if (leafGuildsAPI == null) {
-                LogUtils.warning("LeafGuildsHook - initialize: API do LeafGuilds não disponível. A integração não será carregada.");
+               LogUtils.debugMedium("LeafGuildsHook - initialize: API do LeafGuilds não disponível. A integração não será carregada.");
                 return;
             }
 
@@ -51,13 +51,13 @@ public class LeafGuildsHook extends BaseClanProvider {
             try {
                 Collection<Guild> guilds = leafGuildsAPI.getStoredGuilds();
                 int guildCount = guilds != null ? guilds.size() : 0;
-                plugin.getLogger().info("LeafGuildsHook - initialize: Número de guildas detectadas: " + guildCount);
+                LogUtils.debugMedium("LeafGuildsHook - initialize: Número de guildas detectadas: " + guildCount);
             } catch (Exception e) {
-                LogUtils.info("LeafGuildsHook - initialize: Erro ao obter guildas iniciais: " + e.getMessage());
+                LogUtils.debugMedium("LeafGuildsHook - initialize: Erro ao obter guildas iniciais: " + e.getMessage());
             }
 
         } catch (Exception e) {
-            LogUtils.info("LeafGuildsHook - initialize: Falha ao inicializar integração com LeafGuilds" + e);
+            LogUtils.debugMedium("LeafGuildsHook - initialize: Falha ao inicializar integração com LeafGuilds" + e);
             e.printStackTrace();
         }
     }
@@ -88,7 +88,7 @@ public class LeafGuildsHook extends BaseClanProvider {
             }
         } catch (Exception e) {
             if (plugin.getConfig().getBoolean("debug", false)) {
-                LogUtils.info("Erro ao obter tag da guilda do jogador: " + player.getName() + e);
+                LogUtils.debugMedium("Erro ao obter tag da guilda do jogador: " + player.getName() + e);
             }
         }
 
@@ -98,32 +98,32 @@ public class LeafGuildsHook extends BaseClanProvider {
     @Override
     public List<String> getAllClanTags() {
         if (!isAvailable()) {
-            LogUtils.info("LeafGuildsHook - getAllClanTags: Hook não está disponível");
+            LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: Hook não está disponível");
             return new ArrayList<>();
         }
 
         try {
 
-            LogUtils.info("LeafGuildsHook - getAllClanTags: Obtendo todas as guildas...");
+            LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: Obtendo todas as guildas...");
 
             Collection<Guild> guilds = null;
 
             try {
                 guilds = leafGuildsAPI.getStoredGuilds();
-                LogUtils.info("LeafGuildsHook - getAllClanTags: getStoredGuilds() foi chamado com sucesso");
+                LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: getStoredGuilds() foi chamado com sucesso");
             } catch (Exception e) {
-                LogUtils.warning("LeafGuildsHook - getAllClanTags: Erro ao chamar getStoredGuilds(): " + e.getMessage());
-                LogUtils.info("LeafGuildsHook - getAllClanTags: Tentando método alternativo...");
+               LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: Erro ao chamar getStoredGuilds(): " + e.getMessage());
+                LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: Tentando método alternativo...");
                 return getGuildsFromOnlinePlayers();
             }
 
             if (guilds == null) {
-                LogUtils.info("LeafGuildsHook - getAllClanTags: A coleção de guildas retornou nula, tentando método alternativo");
+                LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: A coleção de guildas retornou nula, tentando método alternativo");
                 return getGuildsFromOnlinePlayers();
             }
 
             if (guilds.isEmpty()) {
-                LogUtils.info("LeafGuildsHook - getAllClanTags: A coleção de guildas está vazia, tentando método alternativo");
+                LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: A coleção de guildas está vazia, tentando método alternativo");
                 List<String> alternativeTags = getGuildsFromOnlinePlayers();
                 if (!alternativeTags.isEmpty()) {
                     return alternativeTags;
@@ -135,33 +135,33 @@ public class LeafGuildsHook extends BaseClanProvider {
             List<String> tags = new ArrayList<>();
             for (Guild guild : guilds) {
                 if (guild == null) {
-                    LogUtils.info("LeafGuildsHook - getAllClanTags: Encontrada uma guilda nula");
+                    LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: Encontrada uma guilda nula");
                     continue;
                 }
 
                 String tag = guild.getTag();
                 if (tag != null && !tag.isEmpty()) {
                     tags.add(tag);
-                    LogUtils.info("LeafGuildsHook - getAllClanTags: Adicionada guilda com tag: " + tag);
+                    LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: Adicionada guilda com tag: " + tag);
                 } else {
-                    LogUtils.info("LeafGuildsHook - getAllClanTags: Guilda sem tag válida");
+                    LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: Guilda sem tag válida");
                 }
             }
 
             
             if (tags.isEmpty()) {
-                LogUtils.info("LeafGuildsHook - getAllClanTags: Nenhuma tag válida encontrada, tentando método alternativo");
+                LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: Nenhuma tag válida encontrada, tentando método alternativo");
                 return getGuildsFromOnlinePlayers();
             }
 
-            LogUtils.info("LeafGuildsHook - getAllClanTags: Total de tags válidas: " + tags.size());
+            LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: Total de tags válidas: " + tags.size());
             return tags;
         } catch (Exception e) {
-            LogUtils.warning( "Erro ao obter todas as guildas", e);
+           LogUtils.debugMedium( "Erro ao obter todas as guildas" + e);
             e.printStackTrace();
 
 
-            LogUtils.info("LeafGuildsHook - getAllClanTags: Devido ao erro, tentando método alternativo");
+            LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: Devido ao erro, tentando método alternativo");
             return getGuildsFromOnlinePlayers();
         }
     }
@@ -171,7 +171,7 @@ public class LeafGuildsHook extends BaseClanProvider {
      * Usamos jogadores online para tentar encontrar guildas
      */
     private List<String> getGuildsFromOnlinePlayers() {
-        LogUtils.info("LeafGuildsHook - getGuildsFromOnlinePlayers: Tentando obter guildas através de jogadores online");
+        LogUtils.debugMedium("LeafGuildsHook - getGuildsFromOnlinePlayers: Tentando obter guildas através de jogadores online");
         List<String> tags = new ArrayList<>();
 
         try {
@@ -184,18 +184,18 @@ public class LeafGuildsHook extends BaseClanProvider {
                             String tag = guild.getTag();
                             if (tag != null && !tag.isEmpty() && !tags.contains(tag)) {
                                 tags.add(tag);
-                                LogUtils.info("LeafGuildsHook - getGuildsFromOnlinePlayers: Adicionada guilda: " + tag);
+                                LogUtils.debugMedium("LeafGuildsHook - getGuildsFromOnlinePlayers: Adicionada guilda: " + tag);
                             }
                         }
                     }
                 } catch (Exception e) {
-                    LogUtils.warning("LeafGuildsHook - getGuildsFromOnlinePlayers: Erro ao processar jogador " + player.getName() + ": " + e.getMessage());
+                   LogUtils.debugMedium("LeafGuildsHook - getGuildsFromOnlinePlayers: Erro ao processar jogador " + player.getName() + ": " + e.getMessage());
                 }
             }
 
-            LogUtils.info("LeafGuildsHook - getGuildsFromOnlinePlayers: Total de guildas encontradas: " + tags.size());
+            LogUtils.debugMedium("LeafGuildsHook - getGuildsFromOnlinePlayers: Total de guildas encontradas: " + tags.size());
         } catch (Exception e) {
-            LogUtils.warning("LeafGuildsHook - getGuildsFromOnlinePlayers: Erro geral", e);
+           LogUtils.debugMedium("LeafGuildsHook - getGuildsFromOnlinePlayers: Erro geral"+ e);
         }
 
         return tags;
@@ -234,7 +234,7 @@ public class LeafGuildsHook extends BaseClanProvider {
                 }
             }
         } catch (Exception e) {
-            LogUtils.warning("Erro ao obter todos os clãs do LeafGuilds", e);
+           LogUtils.debugMedium("Erro ao obter todos os clãs do LeafGuilds"+ e);
         }
 
         return clans;
@@ -256,7 +256,7 @@ public class LeafGuildsHook extends BaseClanProvider {
             }
         } catch (Exception e) {
             if (plugin.getConfig().getBoolean("debug", false)) {
-                LogUtils.warning("Erro ao obter guilda do jogador: " + player.getName(), e);
+               LogUtils.debugMedium("Erro ao obter guilda do jogador: " + player.getName() + e);
             }
         }
 
@@ -290,7 +290,7 @@ public class LeafGuildsHook extends BaseClanProvider {
             }
         } catch (Exception e) {
             if (plugin.getConfig().getBoolean("debug", false)) {
-                LogUtils.warning("Erro ao obter guilda pela tag: " + tag, e);
+               LogUtils.debugMedium("Erro ao obter guilda pela tag: " + tag+ e);
             }
         }
 
@@ -324,13 +324,13 @@ public class LeafGuildsHook extends BaseClanProvider {
                     try {
                         return member.getGuild().getLeader().isOnline();
                     } catch (Exception ex) {
-                        LogUtils.warning( "Erro ao verificar se jogador é líder usando ambos os métodos", ex);
+                       LogUtils.debugMedium( "Erro ao verificar se jogador é líder usando ambos os métodos"+ ex);
                     }
                 }
             }
         } catch (Exception e) {
             if (plugin.getConfig().getBoolean("debug", false)) {
-                LogUtils.warning("Erro ao verificar se jogador é líder: " + player.getName(), e);
+               LogUtils.debugMedium("Erro ao verificar se jogador é líder: " + player.getName()+ e);
             }
         }
 
@@ -362,7 +362,7 @@ public class LeafGuildsHook extends BaseClanProvider {
             }
         } catch (Exception e) {
             if (plugin.getConfig().getBoolean("debug", false)) {
-                LogUtils.warning( "Erro ao obter membros da guilda: " + tag, e);
+               LogUtils.debugMedium( "Erro ao obter membros da guilda: " + tag+ e);
             }
         }
 
@@ -385,7 +385,7 @@ public class LeafGuildsHook extends BaseClanProvider {
             }
         } catch (Exception e) {
             if (plugin.getConfig().getBoolean("debug", false)) {
-                LogUtils.warning( "Erro ao obter líder da guilda: " + tag, e);
+               LogUtils.debugMedium( "Erro ao obter líder da guilda: " + tag + e);
             }
         }
 
@@ -473,7 +473,7 @@ public class LeafGuildsHook extends BaseClanProvider {
             );
         } catch (Exception e) {
             if (plugin.getConfig().getBoolean("debug", false)) {
-                LogUtils.warning("Erro ao converter guilda para GenericClan", e);
+               LogUtils.debugMedium("Erro ao converter guilda para GenericClan"+ e);
             }
             return null;
         }
@@ -489,7 +489,7 @@ public class LeafGuildsHook extends BaseClanProvider {
             Guild guild = getGuildByTag(clanTag);
             return guild != null;
         } catch (Exception e) {
-            LogUtils.warning( "Erro ao verificar existência da guilda: " + clanTag, e);
+           LogUtils.debugMedium( "Erro ao verificar existência da guilda: " + clanTag+ e);
             return false;
         }
     }
@@ -507,7 +507,7 @@ public class LeafGuildsHook extends BaseClanProvider {
             }
             return clanTag;
         } catch (Exception e) {
-            LogUtils.warning( "Erro ao obter nome da guilda: " + clanTag, e);
+           LogUtils.debugMedium( "Erro ao obter nome da guilda: " + clanTag+ e);
             return clanTag;
         }
     }
@@ -528,7 +528,7 @@ public class LeafGuildsHook extends BaseClanProvider {
                         return colorTag;
                     }
                 } catch (Exception e) {
-                    LogUtils.warning( "Erro ao obter colorTag: " + e.getMessage());
+                   LogUtils.debugMedium( "Erro ao obter colorTag: " + e.getMessage());
                 }
 
                 
@@ -536,7 +536,7 @@ public class LeafGuildsHook extends BaseClanProvider {
             }
             return clanTag;
         } catch (Exception e) {
-            LogUtils.warning( "Erro ao obter tag colorida da guilda: " + clanTag, e);
+           LogUtils.debugMedium( "Erro ao obter tag colorida da guilda: " + clanTag+ e);
             return clanTag;
         }
     }
@@ -555,7 +555,7 @@ public class LeafGuildsHook extends BaseClanProvider {
             }
             return 0;
         } catch (Exception e) {
-            LogUtils.warning( "Erro ao obter número de membros da guilda: " + clanTag, e);
+           LogUtils.debugMedium( "Erro ao obter número de membros da guilda: " + clanTag+ e);
             return 0;
         }
     }
@@ -594,7 +594,7 @@ public class LeafGuildsHook extends BaseClanProvider {
 
             return players;
         } catch (Exception e) {
-            LogUtils.warning( "Erro ao obter membros online da guilda: " + clanTag, e);
+           LogUtils.debugMedium( "Erro ao obter membros online da guilda: " + clanTag+ e);
             return new ArrayList<>();
         }
     }
@@ -612,7 +612,7 @@ public class LeafGuildsHook extends BaseClanProvider {
                 return guild != null;
             }
         } catch (Exception e) {
-            LogUtils.warning( "Erro ao verificar se jogador está em guilda: " + player.getName(), e);
+           LogUtils.debugMedium( "Erro ao verificar se jogador está em guilda: " + player.getName()+ e);
         }
 
         return false;
