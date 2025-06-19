@@ -11,6 +11,7 @@ import hplugins.hliga.models.Season;
 import hplugins.hliga.utils.LogUtils;
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -707,6 +708,58 @@ public class DiscordMessageManager {
         }
     }
 
+    /**
+     * Cria um embed para pontos adicionados a um clã
+     *
+     * @param clanTag Tag do clã
+     * @param points Pontos adicionados
+     * @param totalPoints Pontos totais após a operação
+     * @param description Descrição opcional da operação
+     * @return WebhookEmbed configurado
+     */
+    public DiscordWebhook.WebhookEmbed createPointsAddedEmbed(String clanTag, int points, int totalPoints, String description) {
+        int position = calcularPosicaoClan(clanTag);
+        return createClanPointsEmbed(clanTag, points, totalPoints, position, description);
+    }
+
+    /**
+     * Cria um embed para pontos removidos de um clã
+     *
+     * @param clanTag Tag do clã
+     * @param points Pontos removidos
+     * @param totalPoints Pontos totais após a operação
+     * @param description Descrição opcional da operação
+     * @return WebhookEmbed configurado
+     */
+    public DiscordWebhook.WebhookEmbed createPointsRemovedEmbed(String clanTag, int points, int totalPoints, String description) {
+        int position = calcularPosicaoClan(clanTag);
+        return createClanPointsEmbed(clanTag, -points, totalPoints, position, description);
+    }
+
+
+    /**
+     * Calcula a posição atual de um clã no ranking
+     *
+     * @param clanTag Tag do clã
+     * @return Posição do clã (1 a N) ou 999 se não encontrado
+     */
+    private int calcularPosicaoClan(String clanTag) {
+        try {
+            List<ClanPoints> topClans = plugin.getDatabaseManager().getAdapter().getTopClans(Integer.MAX_VALUE);
+
+            for (int i = 0; i < topClans.size(); i++) {
+                if (topClans.get(i).getClanTag().equals(clanTag)) {
+                    return i + 1; // Posições começam em 1, não 0
+                }
+            }
+
+            return 999;
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "Erro ao calcular posição do clã", e);
+            return 999;
+        }
+    }
+
     private Map<String, String> createPointsTokenMap(String clanTag, int points, int totalPoints, int position) {
         Map<String, String> tokens = new HashMap<>();
         FileConfiguration config = plugin.getConfig();
@@ -732,6 +785,7 @@ public class DiscordMessageManager {
         tokens.put("posicao_texto", position + "º lugar");
         tokens.put("acao", isPositive ? "recebeu" : "perdeu");
 
+        // Será substituído se uma descrição for fornecida mais tarde
         tokens.put("descricao", "Sem motivo especificado");
 
         return tokens;
@@ -802,7 +856,7 @@ public class DiscordMessageManager {
                     .append("\n");
         }
 
-        if (topClansText.isEmpty()) {
+        if (topClansText.length() == 0) {
             plugin.getLogger().warning("[hLiga Debug] Texto final vazio após processamento dos clãs!");
             return "Nenhum clã com pontuação registrada nesta temporada.";
         }

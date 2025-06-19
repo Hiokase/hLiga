@@ -21,11 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+@Getter
+@Setter
 public class DiscordWebhook {
 
     private final Main plugin;
-    private final String webhookUrl;
-    private final String staffWebhookUrl;
+    private final String webhookUrl; // Webhook principal para temporadas
+    private final String staffWebhookUrl; // Webhook para logs da staff (pontos)
     private final String botName;
     private final String botAvatar;
     private final int embedColor;
@@ -34,7 +36,6 @@ public class DiscordWebhook {
     public DiscordWebhook(Main plugin) {
         this.plugin = plugin;
         FileConfiguration config = plugin.getConfig();
-
 
         this.webhookUrl = config.getString("discord.webhook_url", "");
         this.staffWebhookUrl = config.getString("discord.staff_webhook_url", "");
@@ -143,7 +144,7 @@ public class DiscordWebhook {
             OutputStream os = null;
             try {
                 os = connection.getOutputStream();
-                byte[] input = json.toString().getBytes(StandardCharsets.UTF_8);
+                byte[] input = json.toString().getBytes("UTF-8");
                 os.write(input, 0, input.length);
             } finally {
                 if (os != null) {
@@ -405,6 +406,8 @@ public class DiscordWebhook {
         return true;
     }
 
+
+
     /**
      * Calcula a posição atual de um clã no ranking
      *
@@ -417,7 +420,7 @@ public class DiscordWebhook {
 
             for (int i = 0; i < topClans.size(); i++) {
                 if (topClans.get(i).getClanTag().equals(clanTag)) {
-                    return i + 1; // Posições começam em 1, não 0
+                    return i + 1; 
                 }
             }
 
