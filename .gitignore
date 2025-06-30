@@ -6,7 +6,6 @@
 *.ipr
 
 *.class
-*.jar
 *.war
 *.ear
 

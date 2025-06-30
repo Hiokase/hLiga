@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies {
-    implementation files('libs/Leaf.jar')
+    implementation files('libs/LeafPlugins.jar')
     compileOnly 'org.spigotmc:spigot-api:1.21-R0.1-SNAPSHOT'
     compileOnly 'org.projectlombok:lombok:1.18.32'
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
