@@ -4,9 +4,9 @@
 # Configurações de sistema e debug
 sistema:
   # Ativar mensagens de debug no console (true para ativar, false para desativar)
-  debug: false
+  debug: true
   # Nível de verbosidade das mensagens de log (1 = mínimo, 2 = normal, 3 = detalhado)
-  log_level: 2
+  log_level: 3
 
 # Configurações do banco de dados
 database:
@@ -51,16 +51,6 @@ database:
       seasons: 1800    # 30 minutos
       player_tags: 600 # 10 minutos
 
-clans:
-  # Plugin de clãs preferido (será usado se múltiplos estiverem disponíveis)
-  # Opções: "SimpleClans", "LeafGuilds", "auto" (seleciona automaticamente se disponível)
-  preferido: "auto"
-  # Sincronizar clãs automaticamente ao iniciar o plugin
-  sincronizar_ao_iniciar: true
-  # Intervalo de sincronização automática em minutos (0 = desativado)
-  intervalo_sincronizacao: 60
-
-
 # Configurações de economia de pontos
 pontos:
   # Multiplicador de pontos (global)
@@ -93,35 +83,46 @@ temporada:
 discord:
   # Ativar integração com Discord
   ativado: true
-  
+
   # === WEBHOOKS SEPARADOS ===
   # URL do webhook principal para temporadas (formato: https://discord.com/api/webhooks/ID/TOKEN)
   # Obtenha esta URL no Discord: Configurações do Servidor -> Integrações -> Webhooks -> Novo Webhook
-  webhook_url: "https://discord.com/api/webhooks/COLOQUE_ID_AQUI/COLOQUE_TOKEN_AQUI"
+  webhook_url: "https://discord.com/api/webhooks/1366196882170183701/rvWph-_4kSwGq0vXX_lkA_CA0sXq83hBaK_za70P1jGBfgtrstgQdgwTBLv8PLFBH3SX"
 
   # URL do webhook para logs de pontos (apenas staff)
   # Este webhook será usado apenas para notificações de pontos adicionados/removidos
-  staff_webhook_url: "https://discord.com/api/webhooks/COLOQUE_ID_STAFF_AQUI/COLOQUE_TOKEN_STAFF_AQUI"
-  
+  staff_webhook_url: "https://discord.com/api/webhooks/1371950964017336352/rI9rfypxJPGHqjo71kw0k4TNfVvuAJWsBiH1LN3mnmLWGhR4se3z6KkXSCC0Kzbnc_a6"
+
   # Nome do bot no Discord (o nome que aparecerá quando enviar mensagens)
   bot_name: "hLiga"
   # Avatar do bot - URL da imagem (opcional)
   bot_avatar: ""
   # Cor da barra lateral das mensagens (decimal) - 3066993 = Verde, 15158332 = Vermelho, 3447003 = Azul
   cor: 3066993
-  
+
   # === CONFIGURAÇÕES DE NOTIFICAÇÕES ===
   # Enviar mensagem quando um clã ganhar pontos (usando webhook de staff)
   anunciar_pontos: true
-  # Quantidade mínima de pontos para anunciar
-  minimo_pontos_anuncio: 100
+  # Quantidade mínima de pontos para anunciar (0 = sempre anunciar)
+  minimo_pontos_anuncio: 0
   # Enviar mensagem quando uma temporada começar/terminar (usando webhook principal)
   anunciar_temporadas: true
   # Enviar resultados ao final da temporada (usando webhook principal)
   anunciar_resultados: true
   # Número de clãs no top a serem anunciados
   top_resultados: 5
+
   # Os modelos de mensagens e formatação avançada estão no arquivo discord.json
+
+# Configurações de plugins de clãs/guildas
+clans:
+  # Plugin de clãs preferido (será usado se múltiplos estiverem disponíveis)
+  # Opções: "SimpleClans", "LeafGuilds", "auto" (seleciona automaticamente se disponível)
+  preferido: "auto"
+  # Sincronizar clãs automaticamente ao iniciar o plugin
+  sincronizar_ao_iniciar: true
+  # Intervalo de sincronização automática em minutos (0 = desativado)
+  intervalo_sincronizacao: 60
 
 # Configurações visuais
 visual:
@@ -131,4 +132,3 @@ visual:
   placeholders_chat: true
   # Exibir todos os clãs ou apenas aqueles com pontos
   mostrar_todos_clans: true
-

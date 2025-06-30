@@ -1,8 +1,11 @@
 name: hLiga
 version: 1.0.0
 main: hplugins.hliga.Main
-depend: [Citizens]
-softdepend: [SimpleClans, LeafPlugins, PlaceholderAPI, HolographicDisplays, DecentHolograms]
+api-version: 1.13
+depend:
+  - Citizens
+  - LeafPlugins
+softdepend: [SimpleClans, PlaceholderAPI, HolographicDisplays, DecentHolograms]
 authors: [hPlugins and Hokase]
 description: Sistema de ligas compatível com Minecraft 1.8-1.21.5 e Java 8+
 website: https://github.com/hplugins/hLiga

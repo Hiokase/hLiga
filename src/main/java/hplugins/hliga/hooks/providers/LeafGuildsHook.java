@@ -7,6 +7,7 @@ import hplugins.hliga.Main;
 import hplugins.hliga.hooks.BaseClanProvider;
 import hplugins.hliga.models.GenericClan;
 import hplugins.hliga.utils.LogUtils;
+import net.sacredlabyrinth.phaed.simpleclans.SimpleClans;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -22,44 +23,10 @@ import java.util.logging.Level;
 public class LeafGuildsHook extends BaseClanProvider {
 
     private final Main plugin;
-    private boolean initialized = false;
     private static final String PROVIDER_NAME = "LeafPlugins";
-    LeafGuildsAPI leafGuildsAPI = LeafGuildsAPI.getApi();
 
     public LeafGuildsHook(Main plugin) {
         this.plugin = plugin;
-        initialize();
-    }
-
-    private void initialize() {
-        try {
-            LogUtils.debug("LeafGuildsHook - initialize: Tentando inicializar hook do LeafGuilds...");
-            boolean pluginPresent = Bukkit.getPluginManager().getPlugin("LeafPlugins") != null;
-            LogUtils.debugMedium("LeafGuildsHook - initialize: Plugin LeafGuilds está carregado? " + pluginPresent);
-
-            if (!pluginPresent) {
-                LogUtils.debugMedium("LeafGuildsHook - initialize: LeafGuilds não encontrado. A integração não será carregada.");
-                return;
-            }
-            if (leafGuildsAPI == null) {
-               LogUtils.debugMedium("LeafGuildsHook - initialize: API do LeafGuilds não disponível. A integração não será carregada.");
-                return;
-            }
-
-            initialized = true;
-            plugin.getLogger().info("LeafGuildsHook - initialize: Integração com LeafGuilds inicializada com sucesso!");
-            try {
-                Collection<Guild> guilds = leafGuildsAPI.getStoredGuilds();
-                int guildCount = guilds != null ? guilds.size() : 0;
-                LogUtils.debugMedium("LeafGuildsHook - initialize: Número de guildas detectadas: " + guildCount);
-            } catch (Exception e) {
-                LogUtils.debugMedium("LeafGuildsHook - initialize: Erro ao obter guildas iniciais: " + e.getMessage());
-            }
-
-        } catch (Exception e) {
-            LogUtils.debugMedium("LeafGuildsHook - initialize: Falha ao inicializar integração com LeafGuilds" + e);
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -69,7 +36,14 @@ public class LeafGuildsHook extends BaseClanProvider {
 
     @Override
     public boolean isAvailable() {
-        return initialized && leafGuildsAPI != null;
+        try {
+            return Main.getLeafGuildsAPI() != null;
+        } catch (Exception e) {
+            if (plugin.getConfig().getBoolean("debug", false)) {
+                plugin.getLogger().log(Level.WARNING, "Erro ao verificar disponibilidade do LeafGuilds", e);
+            }
+            return false;
+        }
     }
 
     @Override
@@ -79,7 +53,7 @@ public class LeafGuildsHook extends BaseClanProvider {
         }
 
         try {
-            Member member = leafGuildsAPI.getMember(player.getUniqueId());
+            Member member = Main.getLeafGuildsAPI().getMember(player.getUniqueId());
             if (member != null) {
                 Guild guild = member.getGuild();
                 if (guild != null) {
@@ -109,7 +83,7 @@ public class LeafGuildsHook extends BaseClanProvider {
             Collection<Guild> guilds = null;
 
             try {
-                guilds = leafGuildsAPI.getStoredGuilds();
+                guilds = Main.getLeafGuildsAPI().getStoredGuilds();
                 LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: getStoredGuilds() foi chamado com sucesso");
             } catch (Exception e) {
                LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: Erro ao chamar getStoredGuilds(): " + e.getMessage());
@@ -148,7 +122,7 @@ public class LeafGuildsHook extends BaseClanProvider {
                 }
             }
 
-            
+
             if (tags.isEmpty()) {
                 LogUtils.debugMedium("LeafGuildsHook - getAllClanTags: Nenhuma tag válida encontrada, tentando método alternativo");
                 return getGuildsFromOnlinePlayers();
@@ -177,7 +151,7 @@ public class LeafGuildsHook extends BaseClanProvider {
         try {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 try {
-                    Member member = leafGuildsAPI.getMember(player.getUniqueId());
+                    Member member = Main.getLeafGuildsAPI().getMember(player.getUniqueId());
                     if (member != null) {
                         Guild guild = member.getGuild();
                         if (guild != null) {
@@ -210,10 +184,10 @@ public class LeafGuildsHook extends BaseClanProvider {
         List<GenericClan> clans = new ArrayList<>();
 
         try {
-            Collection<Guild> guilds = leafGuildsAPI.getStoredGuilds();
+            Collection<Guild> guilds = Main.getLeafGuildsAPI().getStoredGuilds();
 
             if (guilds == null || guilds.isEmpty()) {
-                
+
                 List<String> guildTags = getGuildsFromOnlinePlayers();
                 for (String tag : guildTags) {
                     Guild guild = getGuildByTag(tag);
@@ -225,7 +199,7 @@ public class LeafGuildsHook extends BaseClanProvider {
                     }
                 }
             } else {
-                
+
                 for (Guild guild : guilds) {
                     GenericClan genericClan = convertToGenericClan(guild);
                     if (genericClan != null) {
@@ -247,7 +221,7 @@ public class LeafGuildsHook extends BaseClanProvider {
         }
 
         try {
-            Member member = leafGuildsAPI.getMember(player.getUniqueId());
+            Member member = Main.getLeafGuildsAPI().getMember(player.getUniqueId());
             if (member != null) {
                 Guild guild = member.getGuild();
                 if (guild != null) {
@@ -272,14 +246,14 @@ public class LeafGuildsHook extends BaseClanProvider {
         }
 
         try {
-            
-            Guild guild = leafGuildsAPI.getGuild(tag);
+
+            Guild guild = Main.getLeafGuildsAPI().getGuild(tag);
             if (guild != null) {
                 return guild;
             }
 
-            
-            Collection<Guild> guilds = leafGuildsAPI.getStoredGuilds();
+
+            Collection<Guild> guilds = Main.getLeafGuildsAPI().getStoredGuilds();
             if (guilds != null) {
                 for (Guild g : guilds) {
                     String guildTag = g.getTag();
@@ -314,13 +288,13 @@ public class LeafGuildsHook extends BaseClanProvider {
         }
 
         try {
-            Member member = leafGuildsAPI.getMember(player.getUniqueId());
+            Member member = Main.getLeafGuildsAPI().getMember(player.getUniqueId());
             if (member != null && member.getRole() != null) {
                 try {
-                    
+
                     return member.getRole().getEnum().name().equalsIgnoreCase("LEADER");
                 } catch (Exception e) {
-                    
+
                     try {
                         return member.getGuild().getLeader().isOnline();
                     } catch (Exception ex) {
@@ -394,17 +368,17 @@ public class LeafGuildsHook extends BaseClanProvider {
 
     @Override
     public boolean supportsClanCreation() {
-        return false; 
+        return false;
     }
 
     @Override
     public boolean supportsClanDissolution() {
-        return false; 
+        return false;
     }
 
     @Override
     public boolean supportsMemberEditing() {
-        return false; 
+        return false;
     }
 
     @Override
@@ -416,7 +390,7 @@ public class LeafGuildsHook extends BaseClanProvider {
         try {
             Guild guild = (Guild) nativeObject;
 
-            
+
             List<UUID> memberUUIDs = new ArrayList<>();
             Collection<Member> members = guild.getMembers();
 
@@ -425,7 +399,7 @@ public class LeafGuildsHook extends BaseClanProvider {
                 memberUUIDs.add(uuid);
             }
 
-            
+
             List<Player> onlineMembers = new ArrayList<>();
             Collection<Member> onlineMemberObjects = guild.getOnlineMembers();
 
@@ -439,14 +413,14 @@ public class LeafGuildsHook extends BaseClanProvider {
                 }
             }
 
-            
+
             String leaderName = null;
             Member leader = guild.getLeader();
             if (leader != null) {
                 leaderName = leader.getName();
             }
 
-            
+
             String tag = guild.getTag();
             String name = guild.getName();
             String coloredTag;
@@ -460,16 +434,16 @@ public class LeafGuildsHook extends BaseClanProvider {
                 coloredTag = tag;
             }
 
-            
+
             return new GenericClan(
-                    tag, 
-                    name, 
-                    coloredTag, 
-                    memberUUIDs, 
-                    onlineMembers, 
-                    leaderName, 
-                    guild, 
-                    PROVIDER_NAME 
+                    tag,
+                    name,
+                    coloredTag,
+                    memberUUIDs,
+                    onlineMembers,
+                    leaderName,
+                    guild,
+                    PROVIDER_NAME
             );
         } catch (Exception e) {
             if (plugin.getConfig().getBoolean("debug", false)) {
@@ -521,7 +495,7 @@ public class LeafGuildsHook extends BaseClanProvider {
         try {
             Guild guild = getGuildByTag(clanTag);
             if (guild != null) {
-                
+
                 try {
                     String colorTag = guild.getColorTag();
                     if (colorTag != null && !colorTag.isEmpty()) {
@@ -531,7 +505,7 @@ public class LeafGuildsHook extends BaseClanProvider {
                    LogUtils.debugMedium( "Erro ao obter colorTag: " + e.getMessage());
                 }
 
-                
+
                 return guild.getTag();
             }
             return clanTag;
@@ -606,7 +580,7 @@ public class LeafGuildsHook extends BaseClanProvider {
         }
 
         try {
-            Member member = leafGuildsAPI.getMember(player.getUniqueId());
+            Member member = Main.getLeafGuildsAPI().getMember(player.getUniqueId());
             if (member != null) {
                 Guild guild = member.getGuild();
                 return guild != null;

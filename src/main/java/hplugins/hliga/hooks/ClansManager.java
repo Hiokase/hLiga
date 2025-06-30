@@ -46,12 +46,7 @@ public class ClansManager {
     private void registerProviders() {
         
         registerProvider(new SimpleClansHook(plugin));
-        
-        
         registerProvider(new LeafGuildsHook(plugin));
-        
-        
-        
     }
     
     /**
@@ -129,9 +124,6 @@ public class ClansManager {
         
         sendConsoleMessage("&cNenhum plugin de clãs compatível encontrado! &fFuncionalidades relacionadas a clãs estarão indisponíveis.");
         sendConsoleMessage("&ePlugins de clãs suportados: &fSimpleClans, LeafGuilds");
-        
-        
-        activeProvider = new NullClanProvider(plugin);
     }
     
     /**

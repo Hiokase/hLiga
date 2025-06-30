@@ -105,17 +105,31 @@ public class NotificationUtils {
      */
     public static void announceSeasonEnd(Main plugin, Season season, int topClans) {
         List<ClanPoints> currentTopClans = plugin.getDatabaseManager().getAdapter().getTopClans(10);
-        String winnerName = plugin.getConfigManager().getMessages().getMessage("temporada.sem_vencedor");
 
-        if (!currentTopClans.isEmpty() && currentTopClans.get(0).points > 0) {
-            ClanPoints winner = currentTopClans.get(0);
+        List<ClanPoints> validParticipants = new ArrayList<>();
+        for (ClanPoints clanPoints : currentTopClans) {
+            if (clanPoints.getPoints() > 0) {
+                validParticipants.add(clanPoints);
+            }
+        }
+
+        String winnerName;
+        boolean hasWinners = !validParticipants.isEmpty();
+
+        if (hasWinners) {
+            ClanPoints winner = validParticipants.get(0);
             GenericClan clan = plugin.getClansManager().getClan(winner.clanTag);
             winnerName = clan != null ? clan.getTag() : winner.clanTag;
 
             season.winnerClan = winner.clanTag;
             season.winnerPoints = winner.points;
-            season.topClans = new ArrayList<>(currentTopClans);
+            season.topClans = new ArrayList<>(validParticipants);
             plugin.getDatabaseManager().getAdapter().saveSeason(season);
+        } else {
+            winnerName = plugin.getConfigManager().getMessages().getMessage("temporada.sem_vencedor");
+            season.winnerClan = null;
+            season.winnerPoints = 0;
+            season.topClans = new ArrayList<>();
         }
 
         String title = plugin.getConfigManager().getMessages().getMessage("titulos_temporada.finalizada_titulo");
@@ -158,15 +172,20 @@ public class NotificationUtils {
         }
 
         StringBuilder rankingFinal = new StringBuilder();
-        for (int i = 0; i < Math.min(5, currentTopClans.size()); i++) {
-            ClanPoints clanPoints = currentTopClans.get(i);
-            GenericClan clan = plugin.getClansManager().getClan(clanPoints.clanTag);
-            String clanName = clan != null ? clan.getTag() : clanPoints.clanTag;
-            String posicao = (i + 1) + "º";
-            rankingFinal.append(posicao).append(" ").append(clanName)
-                    .append(" - ").append(NumberFormatter.format(clanPoints.points)).append(" pontos");
-            if (i < Math.min(4, currentTopClans.size() - 1)) {
-                rankingFinal.append("\n");
+
+        if (!hasWinners) {
+            rankingFinal.append("Nenhum clã participou desta temporada");
+        } else {
+            for (int i = 0; i < Math.min(5, validParticipants.size()); i++) {
+                ClanPoints clanPoints = validParticipants.get(i);
+                GenericClan clan = plugin.getClansManager().getClan(clanPoints.clanTag);
+                String clanName = clan != null ? clan.getTag() : clanPoints.clanTag;
+                String posicao = (i + 1) + "º";
+                rankingFinal.append(posicao).append(" ").append(clanName)
+                        .append(" - ").append(NumberFormatter.format(clanPoints.points)).append(" pontos");
+                if (i < Math.min(4, validParticipants.size() - 1)) {
+                    rankingFinal.append("\n");
+                }
             }
         }
 
@@ -182,7 +201,6 @@ public class NotificationUtils {
             Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', linhaFormatada));
         }
 
-        plugin.getLigaManager().sendDiscordSeasonEnd(season);
     }
 
     /**
@@ -282,4 +300,6 @@ public class NotificationUtils {
 
         VersionUtils.playSound(player, sound, volume, pitch);
     }
+
+
 }

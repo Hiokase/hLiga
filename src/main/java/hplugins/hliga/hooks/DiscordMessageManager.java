@@ -1,721 +1,449 @@
 package hplugins.hliga.hooks;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import hplugins.hliga.Main;
 import hplugins.hliga.models.ClanPoints;
-import hplugins.hliga.models.GenericClan;
 import hplugins.hliga.models.Season;
 import hplugins.hliga.utils.LogUtils;
-import lombok.Getter;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.FileConfiguration;
+import hplugins.hliga.utils.TimeUtils;
+import org.bukkit.Bukkit;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 
 /**
- * Gerenciador para as mensagens enviadas para o Discord.
- * Utiliza configurações armazenadas em discord.json
+ * Gerenciador de mensagens Discord para o sistema hLiga
+ * Responsável por criar e formatar embeds personalizados para diferentes tipos de notificações
  */
-@Getter
 public class DiscordMessageManager {
+
     private final Main plugin;
-    /**
-     * -- GETTER --
-     *  Obtém as configurações de mensagens do Discord
-     *
-     * @return JsonObject com as configurações
-     */
+    private final Gson gson;
     private JsonObject messagesConfig;
-    private final Gson gson = new Gson();
 
     public DiscordMessageManager(Main plugin) {
         this.plugin = plugin;
-        loadDiscordConfig();
+        this.gson = new GsonBuilder().setPrettyPrinting().create();
+        loadMessagesConfig();
     }
 
     /**
-     * Carrega as configurações do arquivo discord.json
+     * Carrega a configuração de mensagens do arquivo discord.json
      */
-    private void loadDiscordConfig() {
-        File dataFolder = plugin.getDataFolder();
-        File configFile = new File(dataFolder, "discord.json");
+    public void loadMessagesConfig() {
+        File configFile = new File(plugin.getDataFolder(), "discord.json");
 
         if (!configFile.exists()) {
+            LogUtils.info("Arquivo discord.json não encontrado, criando a partir dos recursos...");
             try {
-                dataFolder.mkdirs();
-
-                java.io.InputStream inputStream = plugin.getResource("discord.json");
-
-                if (inputStream == null) {
-                    plugin.getLogger().warning("Recurso discord.json não encontrado no plugin, criando modelo padrão...");
-                    createDefaultDiscordJson(configFile);
-                } else {
-                    try (BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-
-                        StringBuilder jsonContent = new StringBuilder();
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            jsonContent.append(line).append("\n");
-                        }
-
-                        Files.write(configFile.toPath(), jsonContent.toString().getBytes(StandardCharsets.UTF_8));
-                        LogUtils.debug("Arquivo discord.json criado com sucesso!");
-                    }
+                if (!plugin.getDataFolder().exists()) {
+                    plugin.getDataFolder().mkdirs();
                 }
-            } catch (IOException e) {
-                plugin.getLogger().log(Level.SEVERE, "Erro ao criar arquivo discord.json: " + e.getMessage(), e);
-                createDefaultDiscordJson(configFile);
+
+                plugin.saveResource("discord.json", false);
+                LogUtils.info("Arquivo discord.json criado com sucesso em: " + configFile.getAbsolutePath());
+            } catch (Exception e) {
+                LogUtils.warning("Erro ao criar arquivo discord.json: " + e.getMessage());
+                messagesConfig = null;
                 return;
             }
         }
 
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new java.io.FileInputStream(configFile), StandardCharsets.UTF_8))) {
-            messagesConfig = gson.fromJson(reader, JsonObject.class);
+        try {
+            String content = readFileContent(configFile);
+            LogUtils.info("=== CARREGANDO DISCORD.JSON ===");
+            LogUtils.info("Arquivo: " + configFile.getAbsolutePath());
+            LogUtils.info("Existe: " + configFile.exists());
+            LogUtils.info("Tamanho: " + content.length() + " caracteres");
+            LogUtils.info("Últimas modificações: " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date(configFile.lastModified())));
 
-            if (messagesConfig == null) {
-                plugin.getLogger().warning("Arquivo discord.json inválido, criando modelo padrão...");
-                createDefaultDiscordJson(configFile);
-                try (BufferedReader newReader = new BufferedReader(
-                        new InputStreamReader(new java.io.FileInputStream(configFile), StandardCharsets.UTF_8))) {
-                    messagesConfig = gson.fromJson(newReader, JsonObject.class);
-                }
-            } else {
-                LogUtils.debug("Configurações de mensagens do Discord carregadas com sucesso!");
+            JsonParser parser = new JsonParser();
+            this.messagesConfig = parser.parse(content).getAsJsonObject();
+
+            LogUtils.info("JSON parseado com sucesso. Seções encontradas:");
+
+            if (messagesConfig.has("embed_nova_temporada")) {
+                JsonObject config = messagesConfig.getAsJsonObject("embed_nova_temporada");
+                boolean ativo = config.has("ativo") ? config.get("ativo").getAsBoolean() : false;
+                String titulo = config.has("titulo") ? config.get("titulo").getAsString() : "NÃO DEFINIDO";
+                String descricao = config.has("descricao") ? config.get("descricao").getAsString() : "NÃO DEFINIDO";
+                LogUtils.info("- embed_nova_temporada: " + (ativo ? "ATIVO" : "INATIVO"));
+                LogUtils.info("  └─ Título: " + titulo);
+                LogUtils.info("  └─ Descrição: " + (descricao.length() > 50 ? descricao.substring(0, 50) + "..." : descricao));
             }
-        } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "Erro ao carregar discord.json: " + e.getMessage(), e);
-            createDefaultDiscordJson(configFile);
-            messagesConfig = new JsonObject();
+
+            if (messagesConfig.has("embed_fim_temporada")) {
+                JsonObject config = messagesConfig.getAsJsonObject("embed_fim_temporada");
+                boolean ativo = config.has("ativo") ? config.get("ativo").getAsBoolean() : false;
+                LogUtils.info("- embed_fim_temporada: " + (ativo ? "ATIVO" : "INATIVO"));
+            }
+
+            if (messagesConfig.has("embed_pontos_adicionados")) {
+                JsonObject config = messagesConfig.getAsJsonObject("embed_pontos_adicionados");
+                boolean ativo = config.has("ativo") ? config.get("ativo").getAsBoolean() : false;
+                LogUtils.info("- embed_pontos_adicionados: " + (ativo ? "ATIVO" : "INATIVO"));
+            }
+
+            if (messagesConfig.has("embed_pontos_removidos")) {
+                JsonObject config = messagesConfig.getAsJsonObject("embed_pontos_removidos");
+                boolean ativo = config.has("ativo") ? config.get("ativo").getAsBoolean() : false;
+                LogUtils.info("- embed_pontos_removidos: " + (ativo ? "ATIVO" : "INATIVO"));
+            }
+
+            LogUtils.info("=== FIM CARREGAMENTO DISCORD.JSON ===");
+
+        } catch (Exception e) {
+            LogUtils.warning("Erro ao carregar configuração Discord: " + e.getMessage());
+            e.printStackTrace();
+            this.messagesConfig = null;
         }
+    }
+
+    /**
+     * Recarrega as configurações do discord.json
+     */
+    public void reloadConfig() {
+        LogUtils.info("Recarregando configurações do discord.json...");
+        loadMessagesConfig();
+    }
+
+    /**
+     * Lê o conteúdo de um arquivo
+     */
+    private String readFileContent(File file) throws IOException {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append('\n');
+            }
+        }
+        return content.toString();
     }
 
     /**
      * Cria um embed para início de temporada
-     *
-     * @param season Temporada iniciada
-     * @return WebhookEmbed configurado
      */
     public DiscordWebhook.WebhookEmbed createSeasonStartEmbed(Season season) {
-        if (messagesConfig == null || !messagesConfig.has("mensagens") ||
-                !messagesConfig.getAsJsonObject("mensagens").has("temporada_iniciada")) {
-            return createDefaultSeasonStartEmbed(season);
-        }
+        LogUtils.info("=== CRIANDO EMBED NOVA TEMPORADA ===");
+        LogUtils.info("messagesConfig disponível: " + (messagesConfig != null));
 
-        try {
-            JsonObject config = messagesConfig.getAsJsonObject("mensagens")
-                    .getAsJsonObject("temporada_iniciada");
+        if (messagesConfig != null && messagesConfig.has("embed_nova_temporada")) {
+            LogUtils.info("Configuração embed_nova_temporada encontrada, processando...");
+            try {
+                JsonObject config = messagesConfig.getAsJsonObject("embed_nova_temporada");
 
-            DiscordWebhook.WebhookEmbed.WebhookEmbedBuilder builder = DiscordWebhook.WebhookEmbed.builder();
+                boolean ativo = config.has("ativo") ? config.get("ativo").getAsBoolean() : false;
+                LogUtils.info("Embed ativo: " + ativo);
 
-            String title = replaceTokens(
-                    config.has("titulo") ? config.get("titulo").getAsString() : "Nova Temporada Iniciada",
-                    createSeasonTokenMap(season)
-            );
+                if (!ativo) {
+                    LogUtils.info("Embed desativado, usando configuração padrão");
+                    return createDefaultSeasonStartEmbed(season);
+                }
 
-            String description = replaceTokens(
-                    config.has("descricao") ? config.get("descricao").getAsString() : "Uma nova temporada foi iniciada!",
-                    createSeasonTokenMap(season)
-            );
+                DiscordWebhook.WebhookEmbed.WebhookEmbedBuilder builder = DiscordWebhook.WebhookEmbed.builder();
 
-            builder.title(title)
-                    .description(description);
+                String titulo = config.has("titulo") ?
+                        config.get("titulo").getAsString() : "🏆 Nova Temporada Iniciada!";
+                LogUtils.info("Título configurado: " + titulo);
+                builder.title(titulo);
 
-            if (config.has("cor")) {
-                builder.color(config.get("cor").getAsInt());
-            }
+                String descricao = config.has("descricao") ?
+                        config.get("descricao").getAsString() : "A temporada **{nome_temporada}** começou!";
+                LogUtils.info("Descrição original: " + (descricao.length() > 100 ? descricao.substring(0, 100) + "..." : descricao));
+                descricao = replacePlaceholders(descricao, season, null, null, null);
+                LogUtils.info("Descrição final: " + (descricao.length() > 100 ? descricao.substring(0, 100) + "..." : descricao));
+                builder.description(descricao);
 
-            if (config.has("thumbnail") && !config.get("thumbnail").getAsString().isEmpty()) {
-                builder.thumbnail(config.get("thumbnail").getAsString());
-            }
+                int cor = config.has("cor") ? config.get("cor").getAsInt() : 65280;
+                LogUtils.info("Cor configurada: " + cor);
+                builder.color(cor);
 
-            if (config.has("campos") && config.get("campos").isJsonArray()) {
-                JsonArray fieldsArray = config.getAsJsonArray("campos");
+                if (config.has("thumbnail") && !config.get("thumbnail").getAsString().isEmpty()) {
+                    String thumbnail = config.get("thumbnail").getAsString();
+                    LogUtils.info("Thumbnail configurado: " + thumbnail);
+                    builder.thumbnail(thumbnail);
+                }
 
-                for (JsonElement fieldElement : fieldsArray) {
-                    if (fieldElement.isJsonObject()) {
-                        JsonObject fieldObj = fieldElement.getAsJsonObject();
+                if (config.has("campos")) {
+                    JsonObject campos = config.getAsJsonObject("campos");
 
-                        String name = replaceTokens(
-                                fieldObj.has("nome") ? fieldObj.get("nome").getAsString() : "",
-                                createSeasonTokenMap(season)
-                        );
+                    for (Map.Entry<String, JsonElement> entry : campos.entrySet()) {
+                        try {
+                            JsonObject campo = entry.getValue().getAsJsonObject();
 
-                        String value = replaceTokens(
-                                fieldObj.has("valor") ? fieldObj.get("valor").getAsString() : "",
-                                createSeasonTokenMap(season)
-                        );
+                            if (campo.has("ativo") && campo.get("ativo").getAsBoolean()) {
+                                String fieldTitle = campo.has("titulo") ? campo.get("titulo").getAsString() : "Campo";
+                                String fieldValue = campo.has("valor") ? campo.get("valor").getAsString() : "";
+                                boolean fieldInline = campo.has("inline") && campo.get("inline").getAsBoolean();
 
-                        boolean inline = fieldObj.has("inline") && fieldObj.get("inline").getAsBoolean();
+                                fieldValue = replacePlaceholders(fieldValue, season, null, null, null);
 
-                        builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
-                                .name(name)
-                                .value(value)
-                                .inline(inline)
-                                .build());
+                                builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                                        .name(fieldTitle)
+                                        .value(fieldValue)
+                                        .inline(fieldInline)
+                                        .build());
+                            }
+                        } catch (Exception e) {
+                            LogUtils.warning("Erro ao processar campo '" + entry.getKey() + "': " + e.getMessage());
+                        }
                     }
                 }
+
+                String rodape = config.has("rodape") ?
+                        config.get("rodape").getAsString() : "hLiga - Sistema de Ligas de Clãs";
+                LogUtils.info("Rodapé configurado: " + rodape);
+                builder.footer(rodape);
+
+                LogUtils.info("=== EMBED NOVA TEMPORADA CRIADO COM SUCESSO ===");
+                return builder.build();
+
+            } catch (Exception e) {
+                LogUtils.warning("Erro ao processar configuração do Discord (nova_temporada): " + e.getMessage());
+                e.printStackTrace();
             }
-
-            if (config.has("rodape")) {
-                builder.footer(config.get("rodape").getAsString());
+        } else {
+            LogUtils.warning("USANDO FALLBACK! messagesConfig é null ou não tem embed_nova_temporada");
+            LogUtils.warning("messagesConfig null: " + (messagesConfig == null));
+            if (messagesConfig != null) {
+                LogUtils.warning("embed_nova_temporada existe: " + messagesConfig.has("embed_nova_temporada"));
             }
-
-            return builder.build();
-
-        } catch (Exception e) {
-            plugin.getLogger().log(Level.WARNING, "Erro ao processar configuração do Discord para início de temporada", e);
-            return createDefaultSeasonStartEmbed(season);
         }
+
+        LogUtils.warning("=== USANDO CONFIGURAÇÃO PADRÃO (FALLBACK) ===");
+        return createDefaultSeasonStartEmbed(season);
     }
 
     /**
-     * Cria um embed padrão para início de temporada
-     */
-    private DiscordWebhook.WebhookEmbed createDefaultSeasonStartEmbed(Season season) {
-        return DiscordWebhook.WebhookEmbed.builder()
-                .title("\uD83C\uDFC6 Nova Temporada Iniciada")
-                .description("Uma nova temporada de ligas de clãs foi iniciada!")
-                .color(3447003) // Azul
-                .addField(DiscordWebhook.WebhookEmbed.Field.builder()
-                        .name("Nome da Temporada")
-                        .value("**" + season.name + "**")
-                        .inline(false)
-                        .build())
-                .addField(DiscordWebhook.WebhookEmbed.Field.builder()
-                        .name("Data de Início")
-                        .value(hplugins.hliga.utils.TimeUtils.formatDate(season.startDate))
-                        .inline(true)
-                        .build())
-                .addField(DiscordWebhook.WebhookEmbed.Field.builder()
-                        .name("Data de Término")
-                        .value(hplugins.hliga.utils.TimeUtils.formatDate(season.endDate))
-                        .inline(true)
-                        .build())
-                .footer("hLiga - Sistema de Ligas de Clãs")
-                .build();
-    }
-
-    /**
-     * Cria um embed para fim de temporada
-     *
-     * @param season Temporada encerrada
-     * @param topClans Top clãs da temporada
-     * @return WebhookEmbed configurado
+     * Cria um embed para final de temporada
      */
     public DiscordWebhook.WebhookEmbed createSeasonEndEmbed(Season season, List<ClanPoints> topClans) {
-        if (messagesConfig == null || !messagesConfig.has("mensagens") ||
-                !messagesConfig.getAsJsonObject("mensagens").has("temporada_encerrada")) {
-            return createDefaultSeasonEndEmbed(season, topClans);
+        List<ClanPoints> clansWithValidPoints = new ArrayList<>();
+        if (topClans != null) {
+            for (ClanPoints clan : topClans) {
+                if (clan.getPoints() > 0) {
+                    clansWithValidPoints.add(clan);
+                }
+            }
         }
 
-        try {
-            JsonObject config = messagesConfig.getAsJsonObject("mensagens")
-                    .getAsJsonObject("temporada_encerrada");
+        if (messagesConfig != null && messagesConfig.has("embed_fim_temporada")) {
+            try {
+                JsonObject config = messagesConfig.getAsJsonObject("embed_fim_temporada");
 
-            DiscordWebhook.WebhookEmbed.WebhookEmbedBuilder builder = DiscordWebhook.WebhookEmbed.builder();
+                if (!config.has("ativo") || !config.get("ativo").getAsBoolean()) {
+                    return createDefaultSeasonEndEmbed(season, topClans);
+                }
 
-            Map<String, String> tokenMap = createSeasonTokenMap(season);
-            addTopClansTokens(tokenMap, topClans);
+                DiscordWebhook.WebhookEmbed.WebhookEmbedBuilder builder = DiscordWebhook.WebhookEmbed.builder();
 
-            String title = replaceTokens(
-                    config.has("titulo") ? config.get("titulo").getAsString() : "Temporada Encerrada",
-                    tokenMap
-            );
+                String titulo = config.has("titulo") ?
+                        config.get("titulo").getAsString() : "🏁 Temporada Finalizada!";
+                builder.title(titulo);
 
-            String description = replaceTokens(
-                    config.has("descricao") ? config.get("descricao").getAsString() : "A temporada foi encerrada!",
-                    tokenMap
-            );
+                String descricao = config.has("descricao") ?
+                        config.get("descricao").getAsString() : "A temporada **{nome_temporada}** chegou ao fim!";
+                descricao = descricao.replace("{nome_temporada}", season.getName());
+                builder.description(descricao);
 
-            builder.title(title)
-                    .description(description);
+                int cor = config.has("cor") ? config.get("cor").getAsInt() : 16766720;
+                builder.color(cor);
 
-            if (config.has("cor")) {
-                builder.color(config.get("cor").getAsInt());
-            }
+                if (config.has("thumbnail") && !config.get("thumbnail").getAsString().isEmpty()) {
+                    builder.thumbnail(config.get("thumbnail").getAsString());
+                }
 
-            if (config.has("thumbnail") && !config.get("thumbnail").getAsString().isEmpty()) {
-                builder.thumbnail(config.get("thumbnail").getAsString());
-            }
+                if (config.has("ranking")) {
+                    JsonObject rankingConfig = config.getAsJsonObject("ranking");
 
-            if (config.has("campos") && config.get("campos").isJsonArray()) {
-                JsonArray fieldsArray = config.getAsJsonArray("campos");
+                    if (rankingConfig.has("ativo") && rankingConfig.get("ativo").getAsBoolean()) {
+                        String tituloRanking = rankingConfig.has("titulo") ?
+                                rankingConfig.get("titulo").getAsString() : "🏆 Ranking Final";
 
-                for (JsonElement fieldElement : fieldsArray) {
-                    if (fieldElement.isJsonObject()) {
-                        JsonObject fieldObj = fieldElement.getAsJsonObject();
+                        if (!clansWithValidPoints.isEmpty()) {
+                            int mostrarTop = rankingConfig.has("mostrar_top") ?
+                                    rankingConfig.get("mostrar_top").getAsInt() : 3;
 
-                        String name = replaceTokens(
-                                fieldObj.has("nome") ? fieldObj.get("nome").getAsString() : "",
-                                tokenMap
-                        );
+                            StringBuilder topText = new StringBuilder();
+                            for (int i = 0; i < Math.min(mostrarTop, clansWithValidPoints.size()); i++) {
+                                ClanPoints clan = clansWithValidPoints.get(i);
 
-                        String value = replaceTokens(
-                                fieldObj.has("valor") ? fieldObj.get("valor").getAsString() : "",
-                                tokenMap
-                        );
+                                String medal = "🏆";
+                                if (rankingConfig.has("medalhas")) {
+                                    JsonObject medalhas = rankingConfig.getAsJsonObject("medalhas");
+                                    if (i == 0 && medalhas.has("primeiro")) {
+                                        medal = medalhas.get("primeiro").getAsString();
+                                    } else if (i == 1 && medalhas.has("segundo")) {
+                                        medal = medalhas.get("segundo").getAsString();
+                                    } else if (i == 2 && medalhas.has("terceiro")) {
+                                        medal = medalhas.get("terceiro").getAsString();
+                                    }
+                                }
 
-                        boolean inline = fieldObj.has("inline") && fieldObj.get("inline").getAsBoolean();
+                                topText.append(medal).append(" **").append(clan.getClanTag()).append("**: ")
+                                        .append(clan.getPoints()).append(" pontos\n");
+                            }
+
+                            builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                                    .name(tituloRanking)
+                                    .value(topText.toString().trim())
+                                    .inline(false)
+                                    .build());
+                        } else {
+                            String semGanhadores = rankingConfig.has("sem_ganhadores") ?
+                                    rankingConfig.get("sem_ganhadores").getAsString() : "Não houve ganhadores";
+
+                            builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                                    .name(tituloRanking)
+                                    .value(semGanhadores)
+                                    .inline(false)
+                                    .build());
+                        }
+                    }
+                }
+
+                if (config.has("info_temporada")) {
+                    JsonObject infoConfig = config.getAsJsonObject("info_temporada");
+
+                    if (infoConfig.has("ativo") && infoConfig.get("ativo").getAsBoolean()) {
+                        String tituloInfo = infoConfig.has("titulo") ?
+                                infoConfig.get("titulo").getAsString() : "ℹ️ Informações";
+                        String valorInfo = infoConfig.has("valor") ?
+                                infoConfig.get("valor").getAsString() : "Duração: {duracao_dias} dias";
+                        boolean inline = infoConfig.has("inline") && infoConfig.get("inline").getAsBoolean();
+
+                        valorInfo = valorInfo.replace("{duracao_dias}", String.valueOf(season.getDurationDays()));
 
                         builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
-                                .name(name)
-                                .value(value)
+                                .name(tituloInfo)
+                                .value(valorInfo)
                                 .inline(inline)
                                 .build());
                     }
                 }
+
+                String rodape = config.has("rodape") ?
+                        config.get("rodape").getAsString() : "hLiga - Sistema de Ligas de Clãs";
+                builder.footer(rodape);
+
+                return builder.build();
+
+            } catch (Exception e) {
+                LogUtils.warning("Erro ao processar configuração do Discord (fim_temporada): " + e.getMessage());
             }
-
-            if (config.has("rodape")) {
-                builder.footer(config.get("rodape").getAsString());
-            }
-
-            return builder.build();
-
-        } catch (Exception e) {
-            plugin.getLogger().log(Level.WARNING, "Erro ao processar configuração do Discord para fim de temporada", e);
-            return createDefaultSeasonEndEmbed(season, topClans);
         }
+
+        return createDefaultSeasonEndEmbed(season, topClans);
     }
 
     /**
-     * Cria um embed padrão para fim de temporada
-     */
-    private DiscordWebhook.WebhookEmbed createDefaultSeasonEndEmbed(Season season, List<ClanPoints> topClans) {
-        FileConfiguration config = plugin.getConfig();
-
-        DiscordWebhook.WebhookEmbed.WebhookEmbedBuilder embedBuilder = DiscordWebhook.WebhookEmbed.builder()
-                .title("\uD83C\uDFC1 Temporada Encerrada")
-                .description("A temporada **" + season.name + "** foi encerrada!")
-                .color(15158332) // Vermelho-laranja
-                .addField(DiscordWebhook.WebhookEmbed.Field.builder()
-                        .name("Período")
-                        .value(hplugins.hliga.utils.TimeUtils.formatDateRange(season.startDate, season.endDate))
-                        .inline(false)
-                        .build());
-
-        int topLimit = Math.min(config.getInt("discord.top_resultados", 5), topClans.size());
-        embedBuilder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
-                .name("Top Clãs")
-                .value(getTopClansText(topClans, topLimit, config))
-                .inline(false)
-                .build());
-
-        embedBuilder.footer("hLiga - Sistema de Ligas de Clãs");
-
-        return embedBuilder.build();
-    }
-
-    /**
-     * Cria um embed para pontos adicionados a um clã
-     *
-     * @param clanTag Tag do clã
-     * @param points Pontos adicionados
-     * @param totalPoints Pontos totais
-     * @param position Posição no ranking
-     * @return WebhookEmbed configurado
-     */
-    public DiscordWebhook.WebhookEmbed createClanPointsEmbed(String clanTag, int points, int totalPoints, int position) {
-        return createClanPointsEmbed(clanTag, points, totalPoints, position, null);
-    }
-
-    /**
-     * Cria um embed para notificação de pontos adicionados a um clã
-     *
-     * @param clanTag Tag do clã
-     * @param points Pontos adicionados ou removidos (valor negativo)
-     * @param totalPoints Pontos totais
-     * @param position Posição no ranking
-     * @param description Descrição opcional da operação
-     * @return WebhookEmbed configurado
+     * Cria um embed para pontos de clãs (adicionados ou removidos)
      */
     public DiscordWebhook.WebhookEmbed createClanPointsEmbed(String clanTag, int points, int totalPoints, int position, String description) {
-        if (messagesConfig == null || !messagesConfig.has("mensagens") ||
-                !messagesConfig.getAsJsonObject("mensagens").has("pontos_adicionados")) {
-            return createDefaultClanPointsEmbed(clanTag, points, totalPoints, position, description);
-        }
+        boolean isAdding = points >= 0;
+        String embedType = isAdding ? "embed_pontos_adicionados" : "embed_pontos_removidos";
 
-        try {
-            JsonObject config = messagesConfig.getAsJsonObject("mensagens")
-                    .getAsJsonObject(points >= 0 ? "pontos_adicionados" : "pontos_removidos");
+        if (messagesConfig != null && messagesConfig.has(embedType)) {
+            try {
+                JsonObject config = messagesConfig.getAsJsonObject(embedType);
 
-            if (points < 0 && !messagesConfig.getAsJsonObject("mensagens").has("pontos_removidos")) {
-                config = messagesConfig.getAsJsonObject("mensagens")
-                        .getAsJsonObject("pontos_adicionados");
-            }
+                if (!config.has("ativo") || !config.get("ativo").getAsBoolean()) {
+                    return createDefaultClanPointsEmbed(clanTag, points, totalPoints, position, description);
+                }
 
-            DiscordWebhook.WebhookEmbed.WebhookEmbedBuilder builder = DiscordWebhook.WebhookEmbed.builder();
+                DiscordWebhook.WebhookEmbed.WebhookEmbedBuilder builder = DiscordWebhook.WebhookEmbed.builder();
 
-            Map<String, String> tokenMap = createPointsTokenMap(clanTag, points, totalPoints, position);
+                String titulo = config.has("titulo") ?
+                        config.get("titulo").getAsString() : (isAdding ? "➕ Pontos Adicionados" : "➖ Pontos Removidos");
+                builder.title(titulo);
 
-            if (description != null && !description.isEmpty()) {
-                tokenMap.put("descricao", description);
-            }
+                String descricao = config.has("descricao") ?
+                        config.get("descricao").getAsString() :
+                        "O clã **{clan_tag}** " + (isAdding ? "recebeu" : "perdeu") + " **{pontos}** pontos!";
 
-            String defaultTitle = points >= 0 ? "Pontos Adicionados" : "Pontos Removidos";
-            String defaultDesc = points >= 0 ?
-                    "O clã **" + clanTag + "** recebeu pontos!" :
-                    "O clã **" + clanTag + "** perdeu pontos!";
+                ClanPoints tempClanPoints = new ClanPoints(clanTag, totalPoints);
+                descricao = replacePlaceholders(descricao, null, tempClanPoints, description, points);
+                builder.description(descricao);
 
-            String title = replaceTokens(
-                    config.has("titulo") ? config.get("titulo").getAsString() : defaultTitle,
-                    tokenMap
-            );
+                int cor = config.has("cor") ? config.get("cor").getAsInt() : (isAdding ? 65280 : 16711680);
+                builder.color(cor);
 
-            String embedDescription = replaceTokens(
-                    config.has("descricao") ? config.get("descricao").getAsString() : defaultDesc,
-                    tokenMap
-            );
+                if (config.has("thumbnail") && !config.get("thumbnail").getAsString().isEmpty()) {
+                    builder.thumbnail(config.get("thumbnail").getAsString());
+                }
 
-            builder.title(title)
-                    .description(embedDescription);
+                if (config.has("campos")) {
+                    JsonObject campos = config.getAsJsonObject("campos");
 
-            if (config.has("cor")) {
-                builder.color(config.get("cor").getAsInt());
-            }
+                    for (Map.Entry<String, JsonElement> entry : campos.entrySet()) {
+                        try {
+                            JsonObject campo = entry.getValue().getAsJsonObject();
 
-            if (config.has("thumbnail") && !config.get("thumbnail").getAsString().isEmpty()) {
-                builder.thumbnail(config.get("thumbnail").getAsString());
-            }
+                            if (campo.has("ativo") && campo.get("ativo").getAsBoolean()) {
+                                String fieldTitle2 = campo.has("titulo") ? campo.get("titulo").getAsString() : "Campo";
+                                String fieldValue2 = campo.has("valor") ? campo.get("valor").getAsString() : "";
+                                boolean fieldInline2 = campo.has("inline") && campo.get("inline").getAsBoolean();
 
-            if (config.has("campos") && config.get("campos").isJsonArray()) {
-                JsonArray fieldsArray = config.getAsJsonArray("campos");
+                                fieldValue2 = replacePlaceholders(fieldValue2, null, tempClanPoints, description, points);
 
-                for (JsonElement fieldElement : fieldsArray) {
-                    if (fieldElement.isJsonObject()) {
-                        JsonObject fieldObj = fieldElement.getAsJsonObject();
-
-                        String name = replaceTokens(
-                                fieldObj.has("nome") ? fieldObj.get("nome").getAsString() : "",
-                                tokenMap
-                        );
-
-                        String value = replaceTokens(
-                                fieldObj.has("valor") ? fieldObj.get("valor").getAsString() : "",
-                                tokenMap
-                        );
-
-                        boolean inline = fieldObj.has("inline") && fieldObj.get("inline").getAsBoolean();
-
-                        builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
-                                .name(name)
-                                .value(value)
-                                .inline(inline)
-                                .build());
+                                builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                                        .name(fieldTitle2)
+                                        .value(fieldValue2)
+                                        .inline(fieldInline2)
+                                        .build());
+                            }
+                        } catch (Exception e) {
+                            LogUtils.warning("Erro ao processar campo '" + entry.getKey() + "': " + e.getMessage());
+                        }
                     }
                 }
+
+                String rodape = config.has("rodape") ?
+                        config.get("rodape").getAsString() : "hLiga - Sistema de Pontuação";
+                builder.footer(rodape);
+
+                return builder.build();
+
+            } catch (Exception e) {
+                LogUtils.warning("Erro ao processar configuração do Discord (" + embedType + "): " + e.getMessage());
             }
-
-            if (config.has("rodape")) {
-                builder.footer(config.get("rodape").getAsString());
-            }
-
-            return builder.build();
-
-        } catch (Exception e) {
-            plugin.getLogger().log(Level.WARNING, "Erro ao processar configuração do Discord para pontos", e);
-            return createDefaultClanPointsEmbed(clanTag, points, totalPoints, position, description);
         }
+
+        return createDefaultClanPointsEmbed(clanTag, points, totalPoints, position, description);
     }
 
     /**
-     * Cria um embed padrão para pontos adicionados a um clã
+     * Método auxiliar para adicionar campos se estiverem ativos
      */
-    private DiscordWebhook.WebhookEmbed createDefaultClanPointsEmbed(
-            String clanTag, int points, int totalPoints, int position) {
-        return createDefaultClanPointsEmbed(clanTag, points, totalPoints, position, null);
-    }
+    private void addFieldIfActive(DiscordWebhook.WebhookEmbed.WebhookEmbedBuilder builder, JsonObject campos,
+                                  String fieldName, String defaultTitle, String value, boolean inline) {
+        if (campos.has(fieldName)) {
+            JsonObject campo = campos.getAsJsonObject(fieldName);
+            if (campo.has("ativo") && campo.get("ativo").getAsBoolean()) {
+                String titulo = campo.has("titulo") ? campo.get("titulo").getAsString() : defaultTitle;
+                String valorFinal = campo.has("valor") ? campo.get("valor").getAsString() : value;
+                boolean isInline = campo.has("inline") ? campo.get("inline").getAsBoolean() : inline;
 
-    /**
-     * Cria um embed padrão para pontos adicionados a um clã, com descrição opcional
-     */
-    private DiscordWebhook.WebhookEmbed createDefaultClanPointsEmbed(
-            String clanTag, int points, int totalPoints, int position, String description) {
+                valorFinal = valorFinal.replace("{valor}", value);
 
-        FileConfiguration config = plugin.getConfig();
-        boolean isPositive = points >= 0;
-        int absPoints = Math.abs(points);
-
-        String pointsName = absPoints == 1 ?
-                config.getString("pontos.nome", "ponto") :
-                config.getString("pontos.nome_plural", "pontos");
-
-        String title = isPositive ? "💰 Pontos Adicionados" : "⚠️ Pontos Removidos";
-        String desc = isPositive ?
-                "O clã **" + clanTag + "** recebeu pontos!" :
-                "O clã **" + clanTag + "** perdeu pontos!";
-        int color = isPositive ? 3066993 : 15105570; // Verde ou laranja
-        String fieldName = isPositive ? "Pontos Adicionados" : "Pontos Removidos";
-
-        DiscordWebhook.WebhookEmbed.WebhookEmbedBuilder builder = DiscordWebhook.WebhookEmbed.builder()
-                .title(title)
-                .description(desc)
-                .color(color)
-                .addField(DiscordWebhook.WebhookEmbed.Field.builder()
-                        .name(fieldName)
-                        .value("**" + absPoints + "** " + pointsName)
-                        .inline(true)
-                        .build())
-                .addField(DiscordWebhook.WebhookEmbed.Field.builder()
-                        .name("Total de Pontos")
-                        .value("**" + totalPoints + "** " + (totalPoints == 1 ?
-                                config.getString("pontos.nome", "ponto") :
-                                config.getString("pontos.nome_plural", "pontos")))
-                        .inline(true)
-                        .build())
-                .addField(DiscordWebhook.WebhookEmbed.Field.builder()
-                        .name("Posição Atual")
-                        .value(position + "º lugar")
-                        .inline(true)
+                builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                        .name(titulo)
+                        .value(valorFinal)
+                        .inline(isInline)
                         .build());
-
-        if (description != null && !description.isEmpty()) {
-            builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
-                    .name("Motivo")
-                    .value(description)
-                    .inline(false)
-                    .build());
-        }
-
-        return builder.footer("hLiga - Sistema de Ligas de Clãs").build();
-    }
-
-    /**
-     * Substitui tokens em uma string pelos seus valores
-     *
-     * @param input String de entrada com tokens no formato {token}
-     * @param tokens Mapa de tokens e seus valores
-     * @return String com tokens substituídos
-     */
-    private String replaceTokens(String input, Map<String, String> tokens) {
-        if (input == null || input.isEmpty() || tokens == null || tokens.isEmpty()) {
-            return input;
-        }
-
-        String result = input;
-        for (Map.Entry<String, String> entry : tokens.entrySet()) {
-            result = result.replace("{" + entry.getKey() + "}", entry.getValue());
-        }
-
-        return result;
-    }
-
-    /**
-     * Cria um mapa de tokens para temporada
-     *
-     * @param season Temporada
-     * @return Mapa de tokens
-     */
-    private Map<String, String> createSeasonTokenMap(Season season) {
-        Map<String, String> tokens = new HashMap<>();
-
-        tokens.put("temporada_nome", season.name);
-        tokens.put("temporada_inicio", hplugins.hliga.utils.TimeUtils.formatDate(season.startDate));
-        tokens.put("temporada_fim", hplugins.hliga.utils.TimeUtils.formatDate(season.endDate));
-        long duracao = season.endDate - season.startDate;
-        tokens.put("temporada_duracao", hplugins.hliga.utils.TimeUtils.formatDuration(duracao));
-        tokens.put("temporada_periodo", hplugins.hliga.utils.TimeUtils.formatDateRange(
-                season.startDate, season.endDate
-        ));
-
-        return tokens;
-    }
-
-    /**
-     * Adiciona tokens de top clãs ao mapa de tokens
-     *
-     * @param tokens Mapa de tokens
-     * @param topClans Lista de top clãs
-     */
-    private void addTopClansTokens(Map<String, String> tokens, List<ClanPoints> topClans) {
-        FileConfiguration config = plugin.getConfig();
-
-        String topClansText = getTopClansText(topClans, config.getInt("discord.top_resultados", 5), config);
-        tokens.put("top_clas", topClansText);
-
-        int topLimit = Math.min(config.getInt("discord.top_resultados", 5), topClans.size());
-        int validClans = 0;
-
-        String medalFirst = "🥇";
-        String medalSecond = "🥈";
-        String medalThird = "🥉";
-
-        if (messagesConfig != null && messagesConfig.has("mensagens") &&
-                messagesConfig.getAsJsonObject("mensagens").has("medalhas")) {
-            JsonObject medalhas = messagesConfig.getAsJsonObject("mensagens").getAsJsonObject("medalhas");
-
-            if (medalhas.has("primeiro")) {
-                medalFirst = medalhas.get("primeiro").getAsString();
-            }
-
-            if (medalhas.has("segundo")) {
-                medalSecond = medalhas.get("segundo").getAsString();
-            }
-
-            if (medalhas.has("terceiro")) {
-                medalThird = medalhas.get("terceiro").getAsString();
             }
         }
-
-        for (int i = 0; i < topLimit; i++) {
-            if (i >= topClans.size()) break;
-
-            ClanPoints clanPoints = topClans.get(i);
-
-            if (clanPoints.points <= 0) {
-                continue;
-            }
-
-            validClans++;
-
-            String medal;
-            if (i == 0) medal = medalFirst;
-            else if (i == 1) medal = medalSecond;
-            else if (i == 2) medal = medalThird;
-            else medal = (i + 1) + "º";
-
-            tokens.put("top_cla_" + validClans + "_tag", clanPoints.clanTag);
-            tokens.put("top_cla_" + validClans + "_pontos", String.valueOf(clanPoints.points));
-            tokens.put("top_cla_" + validClans + "_medalha", medal);
-        }
-
-        tokens.put("top_clas_quantidade", String.valueOf(validClans));
     }
 
-    /**
-     * Cria um mapa de tokens para pontos de clã
-     *
-     * @param clanTag Tag do clã
-     * @param points Pontos adicionados/removidos
-     * @param totalPoints Pontos totais
-     * @param position Posição no ranking
-     * @return Mapa de tokens
-     */
 
-    /**
-     * Cria um arquivo discord.json padrão
-     * @param configFile Arquivo de destino
-     */
-    private void createDefaultDiscordJson(File configFile) {
-        JsonObject root = new JsonObject();
-        JsonObject mensagens = new JsonObject();
-
-        JsonObject tempIniciada = new JsonObject();
-        tempIniciada.addProperty("titulo", "🏆 Nova Temporada Iniciada");
-        tempIniciada.addProperty("descricao", "Uma nova temporada de ligas de clãs foi iniciada!");
-        tempIniciada.addProperty("cor", 3447003);
-
-        JsonArray camposIniciada = new JsonArray();
-
-        JsonObject campoNome = new JsonObject();
-        campoNome.addProperty("nome", "Nome da Temporada");
-        campoNome.addProperty("valor", "{temporada_nome}");
-        campoNome.addProperty("inline", false);
-        camposIniciada.add(campoNome);
-
-        JsonObject campoInicio = new JsonObject();
-        campoInicio.addProperty("nome", "Data de Início");
-        campoInicio.addProperty("valor", "{temporada_inicio}");
-        campoInicio.addProperty("inline", true);
-        camposIniciada.add(campoInicio);
-
-        JsonObject campoFim = new JsonObject();
-        campoFim.addProperty("nome", "Data de Término");
-        campoFim.addProperty("valor", "{temporada_fim}");
-        campoFim.addProperty("inline", true);
-        camposIniciada.add(campoFim);
-
-        JsonObject campoDuracao = new JsonObject();
-        campoDuracao.addProperty("nome", "Duração");
-        campoDuracao.addProperty("valor", "{temporada_duracao}");
-        campoDuracao.addProperty("inline", true);
-        camposIniciada.add(campoDuracao);
-
-        tempIniciada.add("campos", camposIniciada);
-        tempIniciada.addProperty("rodape", "hLiga - Sistema de Ligas de Clãs");
-        tempIniciada.addProperty("thumbnail", "");
-
-        JsonObject pontosAdd = new JsonObject();
-        pontosAdd.addProperty("titulo", "💰 Pontos Adicionados");
-        pontosAdd.addProperty("descricao", "O clã **{cla_tag}** recebeu pontos!");
-        pontosAdd.addProperty("cor", 3066993);
-
-        JsonArray camposPontosAdd = new JsonArray();
-
-        JsonObject campoPontosAdd = new JsonObject();
-        campoPontosAdd.addProperty("nome", "Pontos Adicionados");
-        campoPontosAdd.addProperty("valor", "**{pontos_adicionados}** {pontos_nome}");
-        campoPontosAdd.addProperty("inline", true);
-        camposPontosAdd.add(campoPontosAdd);
-
-        JsonObject campoTotal = new JsonObject();
-        campoTotal.addProperty("nome", "Total de Pontos");
-        campoTotal.addProperty("valor", "**{pontos_total}** {pontos_nome_plural}");
-        campoTotal.addProperty("inline", true);
-        camposPontosAdd.add(campoTotal);
-
-        JsonObject campoPosicao = new JsonObject();
-        campoPosicao.addProperty("nome", "Posição Atual");
-        campoPosicao.addProperty("valor", "{posicao}º lugar");
-        campoPosicao.addProperty("inline", true);
-        camposPontosAdd.add(campoPosicao);
-
-        JsonObject campoMotivo = new JsonObject();
-        campoMotivo.addProperty("nome", "Motivo");
-        campoMotivo.addProperty("valor", "{descricao}");
-        campoMotivo.addProperty("inline", false);
-        camposPontosAdd.add(campoMotivo);
-
-        pontosAdd.add("campos", camposPontosAdd);
-        pontosAdd.addProperty("rodape", "hLiga - Sistema de Ligas de Clãs");
-        pontosAdd.addProperty("thumbnail", "");
-
-        mensagens.add("temporada_iniciada", tempIniciada);
-        mensagens.add("pontos_adicionados", pontosAdd);
-
-        JsonObject cores = new JsonObject();
-        cores.addProperty("azul", 3447003);
-        cores.addProperty("verde", 3066993);
-        cores.addProperty("vermelho", 15158332);
-        cores.addProperty("amarelo", 16776960);
-
-        mensagens.add("cores", cores);
-
-        root.add("mensagens", mensagens);
-
-        try {
-            Files.write(configFile.toPath(), gson.toJson(root).getBytes(StandardCharsets.UTF_8));
-            LogUtils.debug("Arquivo discord.json padrão criado com sucesso!");
-        } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "Erro ao criar arquivo discord.json padrão", e);
-        }
-    }
 
     /**
      * Cria um embed para pontos adicionados a um clã
-     *
-     * @param clanTag Tag do clã
-     * @param points Pontos adicionados
-     * @param totalPoints Pontos totais após a operação
-     * @param description Descrição opcional da operação
-     * @return WebhookEmbed configurado
      */
     public DiscordWebhook.WebhookEmbed createPointsAddedEmbed(String clanTag, int points, int totalPoints, String description) {
         int position = calcularPosicaoClan(clanTag);
@@ -724,143 +452,211 @@ public class DiscordMessageManager {
 
     /**
      * Cria um embed para pontos removidos de um clã
-     *
-     * @param clanTag Tag do clã
-     * @param points Pontos removidos
-     * @param totalPoints Pontos totais após a operação
-     * @param description Descrição opcional da operação
-     * @return WebhookEmbed configurado
      */
     public DiscordWebhook.WebhookEmbed createPointsRemovedEmbed(String clanTag, int points, int totalPoints, String description) {
         int position = calcularPosicaoClan(clanTag);
         return createClanPointsEmbed(clanTag, -points, totalPoints, position, description);
     }
 
+    /**
+     * Cria um embed padrão para início de temporada
+     */
+    private DiscordWebhook.WebhookEmbed createDefaultSeasonStartEmbed(Season season) {
+        DiscordWebhook.WebhookEmbed.WebhookEmbedBuilder builder = DiscordWebhook.WebhookEmbed.builder()
+                .title("🏆 Nova Temporada Iniciada!")
+                .description("Uma nova temporada de liga de clãs foi iniciada!")
+                .color(0x00FF00)
+                .addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                        .name("Nome da Temporada")
+                        .value(season.getName())
+                        .inline(true)
+                        .build())
+                .addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                        .name("Data de Início")
+                        .value(season.getStartDate() != 0 ?
+                                TimeUtils.formatDate(season.getStartDate()) : "Agora")
+                        .inline(true)
+                        .build())
+                .footer("hLiga - Sistema de Ligas de Clãs");
+
+        if (season.getEndDate() != 0) {
+            builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                    .name("Data de Término")
+                    .value(TimeUtils.formatDate(season.getEndDate()))
+                    .inline(true)
+                    .build());
+        }
+
+        return builder.build();
+    }
 
     /**
-     * Calcula a posição atual de um clã no ranking
-     *
-     * @param clanTag Tag do clã
-     * @return Posição do clã (1 a N) ou 999 se não encontrado
+     * Cria um embed padrão para final de temporada
+     */
+    private DiscordWebhook.WebhookEmbed createDefaultSeasonEndEmbed(Season season, List<ClanPoints> topClans) {
+        DiscordWebhook.WebhookEmbed.WebhookEmbedBuilder builder = DiscordWebhook.WebhookEmbed.builder()
+                .title("🏁 Temporada Finalizada!")
+                .description("A temporada **" + season.getName() + "** foi finalizada!")
+                .color(0xFFD700)
+                .footer("hLiga - Sistema de Ligas de Clãs");
+
+        if (!topClans.isEmpty()) {
+            List<ClanPoints> clansWithValidPoints = new ArrayList<>();
+            for (ClanPoints clan : topClans) {
+                if (clan.getPoints() > 0) {
+                    clansWithValidPoints.add(clan);
+                }
+            }
+
+            if (!clansWithValidPoints.isEmpty()) {
+                StringBuilder topText = new StringBuilder();
+                for (int i = 0; i < Math.min(3, clansWithValidPoints.size()); i++) {
+                    ClanPoints clan = clansWithValidPoints.get(i);
+                    String medal = (i == 0) ? "🥇" : (i == 1) ? "🥈" : "🥉";
+                    topText.append(medal).append(" **").append(clan.getClanTag()).append("**: ")
+                            .append(clan.getPoints()).append(" pontos\n");
+                }
+
+                builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                        .name("🏆 Ranking Final")
+                        .value(topText.toString().trim())
+                        .inline(false)
+                        .build());
+            } else {
+                builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                        .name("🏆 Ranking Final")
+                        .value("Não houve ganhadores")
+                        .inline(false)
+                        .build());
+            }
+        } else {
+            builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                    .name("🏆 Ranking Final")
+                    .value("Não houve ganhadores")
+                    .inline(false)
+                    .build());
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * Cria um embed padrão para pontos de clãs
+     */
+    private DiscordWebhook.WebhookEmbed createDefaultClanPointsEmbed(String clanTag, int points, int totalPoints, int position, String description) {
+        boolean isAdding = points >= 0;
+
+        DiscordWebhook.WebhookEmbed.WebhookEmbedBuilder builder = DiscordWebhook.WebhookEmbed.builder()
+                .title(isAdding ? "➕ Pontos Adicionados" : "➖ Pontos Removidos")
+                .description("O clã **" + clanTag + "** " + (isAdding ? "recebeu" : "perdeu") + " **" +
+                        Math.abs(points) + "** pontos!")
+                .color(isAdding ? 0x00FF00 : 0xFF0000)
+                .addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                        .name("👥 Clã")
+                        .value(clanTag)
+                        .inline(true)
+                        .build())
+                .addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                        .name(isAdding ? "➕ Pontos Ganhos" : "➖ Pontos Perdidos")
+                        .value(String.valueOf(Math.abs(points)))
+                        .inline(true)
+                        .build())
+                .addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                        .name("💰 Total de Pontos")
+                        .value(String.valueOf(totalPoints))
+                        .inline(true)
+                        .build())
+                .addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                        .name("🏆 Posição no Ranking")
+                        .value(position + "º lugar")
+                        .inline(true)
+                        .build())
+                .footer("hLiga - Sistema de Pontuação");
+
+        if (description != null && !description.isEmpty()) {
+            builder.addField(DiscordWebhook.WebhookEmbed.Field.builder()
+                    .name("📝 Motivo")
+                    .value(description)
+                    .inline(false)
+                    .build());
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * Substitui placeholders em strings com dados reais
+     */
+    private String replacePlaceholders(String text, Season season, ClanPoints clanPoints, String motivo, Integer pontos) {
+        if (text == null) return "";
+
+        String result = text;
+
+        if (season != null) {
+            result = result.replace("{nome_temporada}", season.getName());
+            result = result.replace("{duracao_dias}", String.valueOf(season.getDurationDays()));
+
+            String dataInicio = season.getStartDate() != 0 ?
+                    TimeUtils.formatDate(season.getStartDate()) : "Agora";
+            String dataFim = season.getEndDate() != 0 ?
+                    TimeUtils.formatDate(season.getEndDate()) : "Indefinido";
+
+            result = result.replace("{data_inicio}", dataInicio);
+            result = result.replace("{data_fim}", dataFim);
+
+            try {
+                List<ClanPoints> allClans = plugin.getPointsManager().getTopClans(1000);
+                int totalClans = allClans.size();
+                int totalClansValidos = 0;
+                for (ClanPoints clan : allClans) {
+                    if (clan.getPoints() > 0) totalClansValidos++;
+                }
+
+                result = result.replace("{total_clans}", String.valueOf(totalClans));
+                result = result.replace("{total_clans_validos}", String.valueOf(totalClansValidos));
+            } catch (Exception e) {
+                result = result.replace("{total_clans}", "0");
+                result = result.replace("{total_clans_validos}", "0");
+            }
+        }
+
+        if (clanPoints != null) {
+            result = result.replace("{clan_tag}", clanPoints.getClanTag());
+            result = result.replace("{total_pontos}", String.valueOf(clanPoints.getPoints()));
+            result = result.replace("{posicao}", String.valueOf(calcularPosicaoClan(clanPoints.getClanTag())));
+        }
+
+        if (pontos != null) {
+            result = result.replace("{pontos}", String.valueOf(Math.abs(pontos)));
+        }
+
+        if (motivo != null && !motivo.trim().isEmpty()) {
+            result = result.replace("{motivo}", motivo);
+        } else {
+            result = result.replace("{motivo}", "Operação administrativa");
+        }
+
+        result = result.replace("{timestamp}", String.valueOf(System.currentTimeMillis() / 1000));
+        result = result.replace("{servidor}", Bukkit.getServer().getName());
+        result = result.replace("{versao_plugin}", plugin.getDescription().getVersion());
+
+        return result;
+    }
+
+    /**
+     * Calcula a posição de um clã no ranking
      */
     private int calcularPosicaoClan(String clanTag) {
         try {
-            List<ClanPoints> topClans = plugin.getDatabaseManager().getAdapter().getTopClans(Integer.MAX_VALUE);
-
-            for (int i = 0; i < topClans.size(); i++) {
-                if (topClans.get(i).getClanTag().equals(clanTag)) {
-                    return i + 1; // Posições começam em 1, não 0
+            List<ClanPoints> ranking = plugin.getPointsManager().getTopClans(100);
+            for (int i = 0; i < ranking.size(); i++) {
+                if (ranking.get(i).getClanTag().equals(clanTag)) {
+                    return i + 1;
                 }
             }
-
-            return 999;
         } catch (Exception e) {
-            plugin.getLogger().log(Level.WARNING, "Erro ao calcular posição do clã", e);
-            return 999;
+            LogUtils.warning("Erro ao calcular posição do clã: " + e.getMessage());
         }
-    }
-
-    private Map<String, String> createPointsTokenMap(String clanTag, int points, int totalPoints, int position) {
-        Map<String, String> tokens = new HashMap<>();
-        FileConfiguration config = plugin.getConfig();
-
-        boolean isPositive = points >= 0;
-        int absPoints = Math.abs(points);
-
-        String pointsName = absPoints == 1 ?
-                config.getString("pontos.nome", "ponto") :
-                config.getString("pontos.nome_plural", "pontos");
-
-        String totalPointsName = totalPoints == 1 ?
-                config.getString("pontos.nome", "ponto") :
-                config.getString("pontos.nome_plural", "pontos");
-
-        tokens.put("cla_tag", clanTag);
-        tokens.put("pontos_adicionados", String.valueOf(absPoints));
-        tokens.put("pontos_removidos", String.valueOf(absPoints));
-        tokens.put("pontos_total", String.valueOf(totalPoints));
-        tokens.put("pontos_nome", pointsName);
-        tokens.put("pontos_nome_plural", config.getString("pontos.nome_plural", "pontos"));
-        tokens.put("posicao", String.valueOf(position));
-        tokens.put("posicao_texto", position + "º lugar");
-        tokens.put("acao", isPositive ? "recebeu" : "perdeu");
-
-        // Será substituído se uma descrição for fornecida mais tarde
-        tokens.put("descricao", "Sem motivo especificado");
-
-        return tokens;
-    }
-
-    /**
-     * Formata a lista de clãs para exibição no Discord
-     *
-     * @param topClans Lista de clãs ordenados por pontuação
-     * @param topLimit Limite de clãs a exibir
-     * @param config Configuração do plugin
-     * @return Texto formatado com a lista de clãs
-     */
-    private String getTopClansText(List<ClanPoints> topClans, int topLimit, FileConfiguration config) {
-        LogUtils.debug("[hLiga Debug] getTopClansText: Recebido " + topClans.size() + " clãs para formatar");
-
-        if (topClans.isEmpty()) {
-            plugin.getLogger().warning("[hLiga Debug] getTopClansText: Lista de clãs vazia!");
-
-            List<GenericClan> clansAvailable = plugin.getClansManager().getAllClans();
-            if (!clansAvailable.isEmpty()) {
-                LogUtils.debug("[hLiga Debug] Existem " + clansAvailable.size() + " clãs disponíveis");
-
-                for (int i = 0; i < Math.min(5, clansAvailable.size()); i++) {
-                    GenericClan clan = clansAvailable.get(i);
-                    LogUtils.debug("[hLiga Debug] Clã #" + i + ": " + clan.getTag() + " - " + clan.getName());
-                }
-            } else {
-                plugin.getLogger().warning("[hLiga Debug] Não existem clãs disponíveis no sistema!");
-            }
-
-            return "Nenhum clã com pontuação registrada nesta temporada.";
-        }
-
-        List<ClanPoints> clansWithPoints = new java.util.ArrayList<>(topClans);
-        clansWithPoints.removeIf(clan -> clan.getPoints() <= 0);
-
-        LogUtils.debug("[hLiga Debug] getTopClansText: Após filtro, restaram " + clansWithPoints.size() + " clãs com pontos");
-
-        if (clansWithPoints.isEmpty()) {
-            return "Nenhum clã com pontuação registrada nesta temporada.";
-        }
-
-        StringBuilder topClansText = new StringBuilder();
-
-        for (int i = 0; i < Math.min(topLimit, clansWithPoints.size()); i++) {
-            ClanPoints clanPoints = clansWithPoints.get(i);
-
-            String medal = "";
-            if (i == 0) medal = "🥇 ";
-            else if (i == 1) medal = "🥈 ";
-            else if (i == 2) medal = "🥉 ";
-            else medal = (i + 1) + "º ";
-
-            String pointsName = clanPoints.points == 1 ?
-                    config.getString("pontos.nome", "ponto") :
-                    config.getString("pontos.nome_plural", "pontos");
-
-            LogUtils.debug("[hLiga Debug] Adicionando clã " + clanPoints.getClanTag() + " com " + clanPoints.getPoints() + " pontos ao texto");
-
-            topClansText.append(medal)
-                    .append("**")
-                    .append(clanPoints.clanTag)
-                    .append("**: ")
-                    .append(clanPoints.points)
-                    .append(" ")
-                    .append(pointsName)
-                    .append("\n");
-        }
-
-        if (topClansText.length() == 0) {
-            plugin.getLogger().warning("[hLiga Debug] Texto final vazio após processamento dos clãs!");
-            return "Nenhum clã com pontuação registrada nesta temporada.";
-        }
-
-        return topClansText.toString();
+        return 1; // Fallback
     }
 }

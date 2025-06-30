@@ -7,6 +7,14 @@
 # - Para linhas múltiplas use o formato de lista (- "texto")
 # - Para linha em branco use: - ""
 #
+# CÓDIGOS DE COR:
+# &0=Preto &1=Azul escuro &2=Verde &3=Ciano &4=Vermelho &5=Roxo
+# &6=Dourado &7=Cinza claro &8=Cinza &9=Azul claro &a=Verde claro
+# &b=Azul água &c=Vermelho claro &d=Rosa &e=Amarelo &f=Branco
+#
+# FORMATAÇÃO:
+# &l=Negrito &o=Itálico &n=Sublinhado &m=Riscado &k=Mágico &r=Reset
+#
 # VARIÁVEIS:
 # {clan} {pontos} {jogador} {posicao} etc. - São substituídas automaticamente
 # ============================================
@@ -182,7 +190,7 @@ pontos:
   removidos: "&c- &f{pontos} pontos removidos do clã &e{clan}&f!"
   sem_clan: "&c[X] &fVocê não está em nenhum clã."
   clan_nao_encontrado: "&c[X] &fClã não encontrado."
-  insuficientes: "&c[X] &fO clã não possui pontos suficientes."
+  insuficientes: "&c[X] &fO clã &e{clan} &fpossui apenas &c{pontos_atual} pontos&f, mas você tentou remover &c{pontos_solicitado} pontos&f."
 
   # Mensagens para administradores
   adicionado_admin: "&a[OK] &f{pontos} pontos adicionados para o clã &e{clan}&f!"

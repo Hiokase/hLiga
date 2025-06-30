@@ -1,127 +1,131 @@
 {
-  "mensagens": {
-    "temporada_iniciada": {
-      "titulo": "🏆 Nova Temporada Iniciada",
-      "descricao": "Uma nova temporada de ligas de clãs foi iniciada!",
-      "cor": 3447003,
-      "campos": [
-        {
-          "nome": "Nome da Temporada",
-          "valor": "{temporada_nome}",
-          "inline": false
-        },
-        {
-          "nome": "Data de Início",
-          "valor": "{temporada_inicio}",
-          "inline": true
-        },
-        {
-          "nome": "Data de Término",
-          "valor": "{temporada_fim}",
-          "inline": true
-        },
-        {
-          "nome": "Duração",
-          "valor": "{temporada_duracao}",
-          "inline": true
-        }
-      ],
-      "rodape": "hLiga - Sistema de Ligas de Clãs",
-      "thumbnail": ""
-    },
-    "temporada_encerrada": {
-      "titulo": "🏁 Temporada Encerrada",
-      "descricao": "A temporada {temporada_nome} foi encerrada!",
-      "cor": 15158332,
-      "campos": [
-        {
-          "nome": "Período",
-          "valor": "{temporada_periodo}",
-          "inline": false
-        },
-        {
-          "nome": "Top Clãs",
-          "valor": "{top_clas}",
-          "inline": false
-        }
-      ],
-      "rodape": "hLiga - Sistema de Ligas de Clãs",
-      "thumbnail": ""
-    },
-    "pontos_adicionados": {
-      "titulo": "💰 Pontos Adicionados",
-      "descricao": "O clã **{cla_tag}** recebeu pontos!",
-      "cor": 3066993,
-      "campos": [
-        {
-          "nome": "Pontos Adicionados",
-          "valor": "**{pontos_adicionados}** {pontos_nome}",
-          "inline": true
-        },
-        {
-          "nome": "Total de Pontos",
-          "valor": "**{pontos_total}** {pontos_nome_plural}",
-          "inline": true
-        },
-        {
-          "nome": "Posição Atual",
-          "valor": "{posicao}º lugar",
-          "inline": true
-        },
-        {
-          "nome": "Motivo",
-          "valor": "{descricao}",
-          "inline": false
-        }
-      ],
-      "rodape": "hLiga - Sistema de Ligas de Clãs",
-      "thumbnail": ""
-    },
-    "pontos_removidos": {
-      "titulo": "⚠️ Pontos Removidos",
-      "descricao": "O clã **{cla_tag}** perdeu pontos!",
-      "cor": 15105570,
-      "campos": [
-        {
-          "nome": "Pontos Removidos",
-          "valor": "**{pontos_removidos}** {pontos_nome}",
-          "inline": true
-        },
-        {
-          "nome": "Total de Pontos",
-          "valor": "**{pontos_total}** {pontos_nome_plural}",
-          "inline": true
-        },
-        {
-          "nome": "Posição Atual",
-          "valor": "{posicao}º lugar",
-          "inline": true
-        },
-        {
-          "nome": "Motivo",
-          "valor": "{descricao}",
-          "inline": false
-        }
-      ],
-      "rodape": "hLiga - Sistema de Ligas de Clãs",
-      "thumbnail": ""
-    },
-    "medalhas": {
-      "primeiro": "🥇",
-      "segundo": "🥈",
-      "terceiro": "🥉"
-    },
-    "cores": {
-      "azul": 3447003,
-      "verde": 3066993,
-      "vermelho": 15158332,
-      "amarelo": 16776960,
-      "laranja": 15105570,
-      "roxo": 10181046,
-      "rosa": 15277667,
-      "preto": 0,
-      "branco": 16777215,
-      "cinza": 10197915
+  "_metadata": {
+    "version": "1.0.4",
+    "description": "Configuração de embeds Discord para hLiga",
+    "last_updated": "2025-06-26",
+    "webhook_types": {
+      "principal": "Para temporadas (início/fim)",
+      "staff": "Para modificações de pontos"
     }
+  },
+
+  "embed_nova_temporada": {
+    "ativo": true,
+    "webhook_type": "principal",
+    "titulo": "",
+    "descricao": "# 🔴 **Temporada Ativa**\n\n> 📊 **Temporada:** `{nome_temporada}`\n> 📅 **Status:** `🟢 ATIVA`\n\n### 🛡️ **Guia de Participação**\n> 💎 Acumule pontos com seu clã\n> ⚔️ Compita no ranking semanal\n> 🏆 Conquiste recompensas exclusivas",
+    "cor": 5793266,
+    "thumbnail": "",
+    "author": {
+      "name": "🏆 hLiga • Sistema de Temporadas",
+      "icon_url": ""
+    },
+    "campos": {
+      "info_detalhada": {
+        "ativo": true,
+        "titulo": "📋 **Informações**",
+        "valor": "**[🚀] Início:** {data_inicio}\n**[🏁] Término:** {data_fim}\n**[👥] Participantes:** {total_clans} clãs",
+        "inline": true
+      },
+      "status_atual": {
+        "ativo": true,
+        "titulo": "⚡ **Status**",
+        "valor": "**[📊] Ranking:** Ativo\n**[🎯] Pontuação:** Liberada\n**[🏅] Recompensas:** Programadas",
+        "inline": true
+      }
+    },
+    "rodape": "🏆 hLiga v1.0.7 • Temporada iniciada",
+    "timestamp": true
+  },
+
+  "embed_fim_temporada": {
+    "ativo": true,
+    "webhook_type": "principal",
+    "titulo": "",
+    "descricao": "# 🏁 **Temporada Finalizada**\n\n> 📊 **Temporada:** `{nome_temporada}`\n> 📅 **Status:** `🔴 FINALIZADA`\n\n### 🏆 **Resultados Oficiais**",
+    "cor": 15844367,
+    "thumbnail": "",
+    "author": {
+      "name": "🏆 hLiga • Resultados da Temporada",
+      "icon_url": ""
+    },
+    "ranking": {
+      "ativo": true,
+      "titulo": "🏆 **Pódio Final**",
+      "sem_ganhadores": "**Nenhum clã participou desta temporada.**\n\n*Aguardamos vocês na próxima!*",
+      "mostrar_top": 3,
+      "medalhas": {
+        "primeiro": "🥇",
+        "segundo": "🥈",
+        "terceiro": "🥉"
+      },
+      "formato_posicao": "{medalha} **{clan_tag}** • `{pontos} pts`"
+    },
+    "estatisticas": {
+      "ativo": true,
+      "titulo": "📊 **Estatísticas**",
+      "campos": {
+        "resumo": {
+          "ativo": true,
+          "titulo": "📋 **Resumo**",
+          "valor": "**[👥] Participantes:** {total_clans_validos} clãs\n**[🎯] Status:** CONCLUÍDA",
+          "inline": true
+        },
+        "timeline": {
+          "ativo": true,
+          "titulo": "⏰ **Período**",
+          "valor": "**[🚀] Início:** {data_inicio}\n**[🏁] Término:** {data_fim}",
+          "inline": true
+        }
+      }
+    },
+    "rodape": "🏆 hLiga v1.0.7 • Temporada concluída",
+    "timestamp": true
+  },
+
+  "embed_pontos_adicionados": {
+    "ativo": true,
+    "webhook_type": "staff",
+    "titulo": "",
+    "descricao": "# ⬆️ **Pontos Adicionados**\n\n> 🏷️ **Clã:** `{clan_tag}`\n> 💎 **Pontos:** `+{pontos}`\n> 🏆 **Posição:** `#{posicao}`",
+    "cor": 5763719,
+    "thumbnail": "",
+    "author": {
+      "name": "📈 hLiga Staff • Pontuação",
+      "icon_url": ""
+    },
+    "campos": {
+      "detalhes": {
+        "ativo": true,
+        "titulo": "📊 **Resultado**",
+        "valor": "**[💎] Total:** {total_pontos} pontos\n**[📝] Motivo:** {motivo}\n**[⏰] Processado:** <t:{timestamp}:F>",
+        "inline": false
+      }
+    },
+    "rodape": "📈 hLiga Staff v1.0.7 • Pontos adicionados",
+    "timestamp": true
+  },
+
+  "embed_pontos_removidos": {
+    "ativo": true,
+    "webhook_type": "staff",
+    "titulo": "",
+    "descricao": "# ⬇️ **Pontos Removidos**\n\n> 🏷️ **Clã:** `{clan_tag}`\n> 💔 **Pontos:** `-{pontos}`\n> 🏆 **Posição:** `#{posicao}`",
+    "cor": 15548997,
+    "thumbnail": "",
+    "author": {
+      "name": "📉 hLiga Staff • Penalização",
+      "icon_url": ""
+    },
+    "campos": {
+      "detalhes": {
+        "ativo": true,
+        "titulo": "⚠️ **Resultado**",
+        "valor": "**[💔] Total:** {total_pontos} pontos\n**[📝] Motivo:** {motivo}\n**[⏰] Processado:** <t:{timestamp}:F>",
+        "inline": false
+      }
+    },
+    "rodape": "📉 hLiga Staff v1.0.7 • Pontos removidos",
+    "timestamp": true
   }
 }

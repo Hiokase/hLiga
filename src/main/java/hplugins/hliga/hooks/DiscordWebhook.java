@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
-@Getter
-@Setter
 public class DiscordWebhook {
 
     private final Main plugin;
@@ -193,11 +191,11 @@ public class DiscordWebhook {
     }
 
     /**
-     * Envia notificação quando um clã recebe pontos
+     * Envia notificação quando um clã recebe ou perde pontos
      *
      * @param clanTag Tag do clã
-     * @param points Pontos adicionados
-     * @param totalPoints Total de pontos do clã
+     * @param points Pontos adicionados (positivo) ou removidos (negativo)
+     * @param totalPoints Total de pontos do clã após a operação
      * @return true se o envio foi bem-sucedido, false caso contrário
      */
     public boolean sendClanPointsNotification(String clanTag, int points, int totalPoints) {
@@ -205,30 +203,50 @@ public class DiscordWebhook {
     }
 
     /**
-     * Envia notificação para o Discord quando pontos são adicionados a um clã
+     * Envia notificação para o Discord quando pontos são modificados em um clã
      *
      * @param clanTag Tag do clã
-     * @param points Pontos adicionados
-     * @param totalPoints Total de pontos do clã
+     * @param points Pontos adicionados (positivo) ou removidos (negativo)
+     * @param totalPoints Total de pontos do clã após a operação
      * @param description Descrição opcional da operação
      * @return true se o envio foi bem-sucedido, false caso contrário
      */
     public boolean sendClanPointsNotification(String clanTag, int points, int totalPoints, String description) {
         FileConfiguration config = plugin.getConfig();
+
         if (!config.getBoolean("discord.anunciar_pontos", true)) {
+            LogUtils.debug("Notificações de pontos Discord desabilitadas");
             return false;
         }
 
-        if (points > 0 && points < config.getInt("discord.minimo_pontos_anuncio", 100)) {
+        int minPoints = config.getInt("discord.minimo_pontos_anuncio", 0);
+        if (points > 0 && points < minPoints) {
+            LogUtils.debug("Pontos abaixo do mínimo para anúncio (" + points + " < " + minPoints + ")");
             return false;
         }
 
-        int position = calcularPosicaoClan(clanTag);
+        if (clanTag == null || clanTag.trim().isEmpty()) {
+            LogUtils.warning("Tag do clã inválida para notificação Discord");
+            return false;
+        }
 
-        WebhookEmbed embed = messageManager.createClanPointsEmbed(clanTag, points, totalPoints, position, description);
+        try {
+            int position = calcularPosicaoClan(clanTag);
 
-        LogUtils.debug("Enviando notificação de pontos para o webhook de staff...");
-        return sendMessage(embed, true); // true = usar webhook de staff
+            WebhookEmbed embed = messageManager.createClanPointsEmbed(clanTag, points, totalPoints, position, description);
+
+            if (embed == null) {
+                LogUtils.warning("Erro ao criar embed de pontos para Discord");
+                return false;
+            }
+
+            LogUtils.debug("Enviando notificação de pontos para o webhook de staff (clã: " + clanTag + ", pontos: " + points + ")");
+            return sendMessage(embed, true); // true = usar webhook de staff
+
+        } catch (Exception e) {
+            LogUtils.warning("Erro ao enviar notificação de pontos para Discord: " + e.getMessage());
+            return false;
+        }
     }
 
     /**
@@ -239,35 +257,76 @@ public class DiscordWebhook {
      */
     public boolean sendSeasonStartNotification(Season season) {
         FileConfiguration config = plugin.getConfig();
+
         if (!config.getBoolean("discord.anunciar_temporadas", true)) {
+            LogUtils.debug("Notificações de temporadas Discord desabilitadas");
             return false;
         }
 
-        WebhookEmbed embed = messageManager.createSeasonStartEmbed(season);
+        if (season == null) {
+            LogUtils.warning("Temporada nula para notificação Discord de início");
+            return false;
+        }
 
-        return sendMessage(embed);
+        try {
+            WebhookEmbed embed = messageManager.createSeasonStartEmbed(season);
+
+            if (embed == null) {
+                LogUtils.warning("Erro ao criar embed de início de temporada para Discord");
+                return false;
+            }
+
+            LogUtils.debug("Enviando notificação de início de temporada para Discord (temporada: " + season.getName() + ")");
+            return sendMessage(embed); // Usar webhook principal para temporadas
+
+        } catch (Exception e) {
+            LogUtils.warning("Erro ao enviar notificação de início de temporada para Discord: " + e.getMessage());
+            return false;
+        }
     }
 
     /**
      * Envia notificação quando uma temporada termina
      *
      * @param season Temporada encerrada
-     * @param topClans Top clãs da temporada
+     * @param topClans Top clãs da temporada (já filtrados)
      * @return true se o envio foi bem-sucedido, false caso contrário
      */
     public boolean sendSeasonEndNotification(Season season, List<ClanPoints> topClans) {
         FileConfiguration config = plugin.getConfig();
+
         if (!config.getBoolean("discord.anunciar_temporadas", true) ||
                 !config.getBoolean("discord.anunciar_resultados", true)) {
+            LogUtils.debug("Notificações de fim de temporada Discord desabilitadas");
             return false;
         }
 
-        WebhookEmbed embed = messageManager.createSeasonEndEmbed(season, topClans);
+        if (season == null) {
+            LogUtils.warning("Temporada nula para notificação Discord de fim");
+            return false;
+        }
 
-        return sendMessage(embed);
+        try {
+            if (topClans == null) {
+                topClans = new ArrayList<>();
+            }
+
+            WebhookEmbed embed = messageManager.createSeasonEndEmbed(season, topClans);
+
+            if (embed == null) {
+                LogUtils.warning("Erro ao criar embed de fim de temporada para Discord");
+                return false;
+            }
+
+            LogUtils.debug("Enviando notificação de fim de temporada para Discord (temporada: " + season.getName() + ", clãs: " + topClans.size() + ")");
+            return sendMessage(embed); // Usar webhook principal para temporadas
+
+        } catch (Exception e) {
+            LogUtils.warning("Erro ao enviar notificação de fim de temporada para Discord: " + e.getMessage());
+            return false;
+        }
     }
 
-    @Getter
     @Setter
     public static class WebhookEmbed {
         private String title;
@@ -279,6 +338,34 @@ public class DiscordWebhook {
         private List<Field> fields = new ArrayList<>();
 
         private WebhookEmbed() {}
+
+        public String getTitle() {
+            return title;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public int getColor() {
+            return color;
+        }
+
+        public String getFooter() {
+            return footer;
+        }
+
+        public String getThumbnail() {
+            return thumbnail;
+        }
+
+        public String getContent() {
+            return content;
+        }
+
+        public List<Field> getFields() {
+            return fields;
+        }
 
         public void addField(String name, String value, boolean inline) {
             fields.add(new Field(name, value, inline));
@@ -420,7 +507,7 @@ public class DiscordWebhook {
 
             for (int i = 0; i < topClans.size(); i++) {
                 if (topClans.get(i).getClanTag().equals(clanTag)) {
-                    return i + 1; 
+                    return i + 1; // Posições começam em 1, não 0
                 }
             }
 
@@ -429,5 +516,15 @@ public class DiscordWebhook {
             plugin.getLogger().log(Level.WARNING, "Erro ao calcular posição do clã", e);
             return 999;
         }
+    }
+
+    /**
+     * Recarrega as configurações do discord.json
+     * Útil para testar mudanças sem reiniciar o servidor
+     */
+    public void reloadDiscordConfig() {
+        LogUtils.info("Recarregando configurações do Discord...");
+        messageManager.reloadConfig();
+        LogUtils.info("Configurações do Discord recarregadas com sucesso!");
     }
 }

@@ -34,6 +34,7 @@ public class GenericClan {
      *
      * @return Tag colorida
      */
+
     private final String coloredTag;
     /**
      * -- GETTER --
@@ -49,7 +50,6 @@ public class GenericClan {
      * @return Lista de jogadores
      */
     private final List<Player> onlineMembers;
-
     /**
      * -- GETTER --
      *  Obtém o nome do líder do clã
@@ -57,11 +57,7 @@ public class GenericClan {
      * @return Nome do líder
      */
     private final String leaderName;
-
-
     private final Object nativeObject;
-
-
     /**
      * -- GETTER --
      *  Obtém o nome do provedor que criou este clã
@@ -69,10 +65,10 @@ public class GenericClan {
      * @return Nome do provedor
      */
     private final String providerName;
-    
+
     /**
      * Construtor para um clã genérico
-     * 
+     *
      * @param tag Tag do clã (identificador único)
      * @param name Nome do clã
      * @param coloredTag Tag do clã com cores
@@ -82,8 +78,8 @@ public class GenericClan {
      * @param nativeObject Objeto nativo do plugin (opcional, para conversão reversa)
      * @param providerName Nome do provedor que criou este clã
      */
-    public GenericClan(String tag, String name, String coloredTag, List<UUID> memberUUIDs, 
-                      List<Player> onlineMembers, String leaderName, Object nativeObject, String providerName) {
+    public GenericClan(String tag, String name, String coloredTag, List<UUID> memberUUIDs,
+                       List<Player> onlineMembers, String leaderName, Object nativeObject, String providerName) {
         this.tag = tag;
         this.name = name;
         this.coloredTag = coloredTag;
@@ -93,10 +89,10 @@ public class GenericClan {
         this.nativeObject = nativeObject;
         this.providerName = providerName;
     }
-    
+
     /**
      * Construtor simplificado para um clã genérico
-     * 
+     *
      * @param tag Tag do clã (identificador único)
      * @param name Nome do clã
      */
@@ -112,17 +108,26 @@ public class GenericClan {
     }
 
     /**
+     * Obtém os UUIDs de todos os membros (alias para getMemberUUIDs)
+     *
+     * @return Lista de UUIDs de todos os membros
+     */
+    public List<UUID> getAllMemberUUIDs() {
+        return getMemberUUIDs();
+    }
+
+    /**
      * Obtém o número de membros no clã
-     * 
+     *
      * @return Número de membros
      */
     public int getMemberCount() {
         return memberUUIDs.size();
     }
-    
+
     /**
      * Obtém o número de membros online
-     * 
+     *
      * @return Número de membros online
      */
     public int getOnlineMemberCount() {
@@ -131,28 +136,28 @@ public class GenericClan {
 
     /**
      * Verifica se um jogador é membro deste clã
-     * 
+     *
      * @param playerUUID UUID do jogador
      * @return true se for membro, false caso contrário
      */
     public boolean isMember(UUID playerUUID) {
         return memberUUIDs.contains(playerUUID);
     }
-    
+
     /**
      * Verifica se um jogador está online neste clã
-     * 
+     *
      * @param player Jogador
      * @return true se estiver online, false caso contrário
      */
     public boolean isOnline(Player player) {
         return onlineMembers.contains(player);
     }
-    
+
     /**
      * Obtém o objeto nativo deste clã
      * Utilizado para conversão reversa quando necessário
-     * 
+     *
      * @param <T> Tipo do objeto nativo
      * @return Objeto nativo do clã
      */
@@ -160,10 +165,10 @@ public class GenericClan {
     public <T> T getNativeObject() {
         return (T) nativeObject;
     }
-    
+
     /**
      * Verifica se este clã tem um objeto nativo
-     * 
+     *
      * @return true se tiver um objeto nativo, false caso contrário
      */
     public boolean hasNativeObject() {
