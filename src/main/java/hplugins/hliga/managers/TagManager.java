@@ -7,7 +7,6 @@ import hplugins.hliga.models.PlayerTag;
 import hplugins.hliga.models.Season;
 import hplugins.hliga.models.TagType;
 import hplugins.hliga.utils.LogUtils;
-import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -21,14 +20,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Gerenciador do sistema de tags
  * Compatível com todas as versões do Minecraft
  */
-@Getter
 public class TagManager {
 
     private final Main plugin;
-    /**
-     * -- GETTER --
-     *  Obtém a configuração de tags
-     */
     private FileConfiguration tagsConfig;
     private BukkitTask updateTask;
 
@@ -61,6 +55,13 @@ public class TagManager {
      */
     public boolean isSystemEnabled() {
         return tagsConfig != null && tagsConfig.getBoolean("sistema.ativado", true);
+    }
+
+    /**
+     * Obtém a configuração de tags
+     */
+    public FileConfiguration getTagsConfig() {
+        return tagsConfig;
     }
 
     /**
@@ -421,43 +422,194 @@ public class TagManager {
     }
 
     /**
-     * Distribui tags permanentes no final de uma temporada
-     * CORRIGIDO: Só distribui tags se houver ganhadores válidos com pontuação
+     * Distribui tags permanentes usando ranking já calculado
+     * CRÍTICO: Evita problema do reset de pontos antes da distribuição
      */
-    public void distributeSeasonTags(Season season) {
+    public void distributeSeasonTagsWithRanking(Season season, List<ClanPoints> preCalculatedRanking) {
+        LogUtils.debug("=== DISTRIBUIÇÃO COM RANKING PRÉ-CALCULADO ===");
+        LogUtils.debug("Sistema de tags habilitado: " + isSystemEnabled());
+        LogUtils.debug("Temporada: " + season.name + " (ID: " + season.id + ")");
+        LogUtils.debug("Ranking pré-calculado recebido: " + preCalculatedRanking.size() + " clãs");
+
         if (!isSystemEnabled()) {
+            LogUtils.warning("Sistema de tags desabilitado - não distribuindo tags de temporada");
             return;
         }
 
         try {
             int positionsRewarded = tagsConfig.getInt("tags_temporada.posicoes_premiadas", 3);
-            List<ClanPoints> topClans = plugin.getPointsManager().getTopClans(positionsRewarded);
+            LogUtils.debug("Posições premiadas configuradas: " + positionsRewarded);
 
-            boolean hasValidWinners = false;
-            for (ClanPoints clanPoints : topClans) {
-                if (clanPoints != null && clanPoints.getPoints() > 0) {
-                    hasValidWinners = true;
+            List<ClanPoints> topClans = preCalculatedRanking.subList(0, Math.min(preCalculatedRanking.size(), positionsRewarded));
+            LogUtils.debug("Top clãs selecionados: " + topClans.size());
+
+            for (int i = 0; i < topClans.size(); i++) {
+                ClanPoints cp = topClans.get(i);
+                if (cp != null) {
+                    LogUtils.debug("  " + (i+1) + "º lugar: " + cp.getClanTag() + " com " + cp.getPoints() + " pontos");
+                } else {
+                    LogUtils.debug("  " + (i+1) + "º lugar: ClanPoints é NULL!");
+                }
+            }
+
+            boolean hasValidClansForTags = false;
+            for (int i = 0; i < Math.min(topClans.size(), positionsRewarded); i++) {
+                ClanPoints cp = topClans.get(i);
+                if (cp != null && cp.getPoints() > 0) {
+                    hasValidClansForTags = true;
                     break;
                 }
             }
 
-            if (!hasValidWinners) {
-                LogUtils.info("Nenhum clã com pontuação válida encontrado - tags de temporada NÃO distribuídas para: " + season.name);
+            if (!hasValidClansForTags) {
+                LogUtils.warning("❌ NENHUM clã válido encontrado para distribuição de tags de temporada: " + season.name);
+                LogUtils.warning("   Motivo: Todos os clãs nas primeiras " + positionsRewarded + " posições têm 0 pontos");
                 return;
             }
 
-            LogUtils.info("🏆 Distribuindo tags de temporada PERMANENTES para ganhadores da temporada: " + season.name);
+            LogUtils.info("🏆 Distribuindo tags de temporada para ganhadores da temporada: " + season.name);
+            LogUtils.info("📊 Top clãs selecionados: " + topClans.size() + " | Posições premiadas: " + positionsRewarded);
+            LogUtils.info("✅ Confirmado: Há clãs válidos para receber tags permanentes");
+
+            int totalMembersTagged = 0;
+
+            for (int i = 0; i < Math.min(topClans.size(), positionsRewarded); i++) {
+                ClanPoints clanPoints = topClans.get(i);
+                if (clanPoints == null || clanPoints.getPoints() <= 0) {
+                    LogUtils.debug("⏭️ Pulando posição " + (i+1) + " - clã sem pontos válidos");
+                    continue;
+                }
+
+                String clanTag = clanPoints.getClanTag();
+                int position = i + 1;
+
+                LogUtils.info("🎯 PROCESSANDO clã " + clanPoints.getClanTag() + " na posição " + position + " com " + clanPoints.getPoints() + " pontos");
+
+                String tagConfig = tagsConfig.getString("tags_temporada.posicoes." + position);
+                if (tagConfig == null || tagConfig.isEmpty()) {
+                    LogUtils.warning("❌ Tag não configurada para a posição " + position + " - pulando");
+                    continue;
+                }
+
+                String formattedTag = tagConfig
+                        .replace("{temporada}", season.name)
+                        .replace("{posicao}", String.valueOf(position));
+
+                GenericClan clan = plugin.getClansManager().getClanByTag(clanTag);
+                if (clan == null) {
+                    LogUtils.warning("❌ Clã não encontrado no sistema: " + clanTag);
+                    continue;
+                }
+
+                List<UUID> allMembers = clan.getAllMemberUUIDs();
+
+                LogUtils.info("👥 Clã " + clanTag + " (posição " + position + ") - Total de membros: " + allMembers.size());
+                LogUtils.info("🏷️ Tag a ser distribuída: " + formattedTag);
+
+                int membersTagged = 0;
+                for (UUID memberUuid : allMembers) {
+                    if (memberUuid != null) {
+                        LogUtils.info("   📝 Criando tag permanente para membro: " + memberUuid);
+                        giveSeasonTag(memberUuid, position, season.id, formattedTag, season.name);
+                        membersTagged++;
+                    } else {
+                        LogUtils.warning("   ❌ UUID nulo encontrado no clã " + clanTag + " - pulando membro");
+                    }
+                }
+
+                LogUtils.info("✅ Tags de temporada distribuídas para o clã " + clanTag + " - " + membersTagged + " membros");
+                totalMembersTagged += membersTagged;
+            }
+
+            LogUtils.info("🎉 DISTRIBUIÇÃO CONCLUÍDA - Total de jogadores que receberam tags: " + totalMembersTagged);
+
+        } catch (Exception e) {
+            LogUtils.error("Erro ao distribuir tags de temporada: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Distribui tags permanentes no final de uma temporada
+     * CORRIGIDO: Só distribui tags se houver ganhadores válidos com pontuação
+     */
+    public void distributeSeasonTags(Season season) {
+        LogUtils.debug("=== INICIANDO DISTRIBUIÇÃO DE TAGS DE TEMPORADA ===");
+        LogUtils.debug("Sistema de tags habilitado: " + isSystemEnabled());
+        LogUtils.debug("Temporada: " + season.name + " (ID: " + season.id + ")");
+
+        if (!isSystemEnabled()) {
+            LogUtils.warning("Sistema de tags desabilitado - não distribuindo tags de temporada");
+            return;
+        }
+
+        try {
+            int positionsRewarded = tagsConfig.getInt("tags_temporada.posicoes_premiadas", 3);
+            LogUtils.debug("Posições premiadas configuradas: " + positionsRewarded);
+
+            List<ClanPoints> topClans = plugin.getPointsManager().getTopClans(positionsRewarded);
+            LogUtils.debug("Top clãs obtidos: " + topClans.size());
+
+            for (int i = 0; i < topClans.size(); i++) {
+                ClanPoints cp = topClans.get(i);
+                if (cp != null) {
+                    LogUtils.debug("  " + (i+1) + "º lugar: " + cp.getClanTag() + " com " + cp.getPoints() + " pontos");
+                } else {
+                    LogUtils.debug("  " + (i+1) + "º lugar: ClanPoints é NULL!");
+                }
+            }
+
+            int validClansCount = 0;
+            for (int i = 0; i < topClans.size(); i++) {
+                ClanPoints clanPoints = topClans.get(i);
+                if (clanPoints != null) {
+                    boolean isValid = clanPoints.getPoints() > 0;
+                    LogUtils.debug("Verificando clã " + (i+1) + ": " + clanPoints.getClanTag() + " | Pontos: " + clanPoints.getPoints() + " | Válido: " + isValid);
+                    if (isValid) {
+                        validClansCount++;
+                    }
+                } else {
+                    LogUtils.debug("ClanPoints nulo encontrado na posição " + (i+1) + "!");
+                }
+            }
+
+            LogUtils.debug("Total de clãs válidos para premiação: " + validClansCount + "/" + topClans.size());
+
+            boolean hasValidClansForTags = false;
+            for (int i = 0; i < Math.min(topClans.size(), positionsRewarded); i++) {
+                ClanPoints cp = topClans.get(i);
+                if (cp != null && cp.getPoints() > 0) {
+                    hasValidClansForTags = true;
+                    break;
+                }
+            }
+
+            if (!hasValidClansForTags) {
+                LogUtils.warning("❌ NENHUM clã válido encontrado para distribuição de tags de temporada: " + season.name);
+                LogUtils.warning("   Motivo: Todos os clãs nas primeiras " + positionsRewarded + " posições têm 0 pontos");
+                return;
+            }
+
+            LogUtils.info("🏆 Distribuindo tags de temporada para ganhadores da temporada: " + season.name);
             LogUtils.info("📊 Top clãs encontrados: " + topClans.size() + " | Posições premiadas: " + positionsRewarded);
+            LogUtils.info("✅ Confirmado: Há clãs válidos para receber tags permanentes");
             int tagsDistributed = 0;
 
             for (int i = 0; i < Math.min(topClans.size(), positionsRewarded); i++) {
                 int position = i + 1;
                 ClanPoints clanPoints = topClans.get(i);
 
-                if (clanPoints == null || clanPoints.getPoints() <= 0) {
-                    LogUtils.debug("Clã na posição " + position + " não tem pontos válidos - pulando distribuição de tag");
+                if (clanPoints == null) {
+                    LogUtils.warning("❌ ClanPoints nulo na posição " + position + " - pulando distribuição de tag");
                     continue;
                 }
+
+                if (clanPoints.getPoints() <= 0) {
+                    LogUtils.info("⏭️ Clã " + clanPoints.getClanTag() + " na posição " + position + " tem " + clanPoints.getPoints() + " pontos - pulando (sem pontos)");
+                    continue;
+                }
+
+                LogUtils.info("🎯 PROCESSANDO clã " + clanPoints.getClanTag() + " na posição " + position + " com " + clanPoints.getPoints() + " pontos");
 
                 String clanTag = clanPoints.getClanTag();
                 GenericClan clan = plugin.getClansManager().getClanByTag(clanTag);
@@ -467,27 +619,31 @@ public class TagManager {
                 }
 
                 String tagFormat = tagsConfig.getString("tags_temporada.formatos." + position);
+                LogUtils.debug("Formato de tag para posição " + position + ": " + tagFormat);
                 if (tagFormat == null) {
-                    LogUtils.debug("Formato de tag não configurado para posição " + position + " - pulando");
+                    LogUtils.warning("Formato de tag não configurado para posição " + position + " - pulando");
                     continue;
                 }
 
                 String seasonIdentifier = getSeasonIdentifier(season);
                 tagFormat = tagFormat.replace("{temporada}", seasonIdentifier);
                 String formattedTag = ChatColor.translateAlternateColorCodes('&', tagFormat);
+                LogUtils.debug("Tag formatada final: " + formattedTag + " (identificador: " + seasonIdentifier + ")");
 
                 int membersTagged = 0;
 
                 List<UUID> allMembers = clan.getAllMemberUUIDs();
 
-                LogUtils.info("🎯 Clã " + clanTag + " (posição " + position + ") - Total de membros: " + allMembers.size());
+                LogUtils.info("👥 Clã " + clanTag + " (posição " + position + ") - Total de membros: " + allMembers.size());
+                LogUtils.info("🏷️ Tag a ser distribuída: " + formattedTag);
 
                 for (UUID memberUuid : allMembers) {
                     if (memberUuid != null) {
+                        LogUtils.info("   📝 Criando tag permanente para membro: " + memberUuid);
                         giveSeasonTag(memberUuid, position, season.id, formattedTag, season.name);
                         membersTagged++;
                     } else {
-                        LogUtils.warning("UUID nulo encontrado no clã " + clanTag + " - pulando membro");
+                        LogUtils.warning("   ❌ UUID nulo encontrado no clã " + clanTag + " - pulando membro");
                     }
                 }
 
@@ -501,15 +657,15 @@ public class TagManager {
                     }
                 }
 
-                LogUtils.info("✅ Tags de temporada distribuídas para o clã " + clanTag + " (posição " + position + ", " + clanPoints.getPoints() + " pontos)");
-                LogUtils.info("📈 Membros processados: " + membersTagged + " | Tags verificadas no banco: " + tagsVerified);
+                LogUtils.info("✅ Tags de temporada distribuídas para o clã " + clanTag + " (posição " + position + ", " + membersTagged + " membros)");
+                LogUtils.info("📊 Membros processados: " + membersTagged + " | Tags verificadas no banco: " + tagsVerified);
                 tagsDistributed++;
             }
 
             if (tagsDistributed > 0) {
-                LogUtils.info("✅ Distribuição de tags de temporada concluída - " + tagsDistributed + " clãs premiados");
+                LogUtils.info("Distribuição de tags de temporada concluída - " + tagsDistributed + " clãs premiados");
             } else {
-                LogUtils.info("❌ Nenhuma tag de temporada foi distribuída - sem ganhadores válidos");
+                LogUtils.debug("Nenhuma tag de temporada foi distribuída - sem ganhadores válidos");
             }
 
         } catch (Exception e) {
@@ -553,18 +709,29 @@ public class TagManager {
      */
     public String getPlayerPermanentTag(UUID playerUuid) {
         if (!isSystemEnabled()) {
+            LogUtils.debug("Sistema de tags desabilitado para jogador " + playerUuid);
+            return "";
+        }
+
+        if (!isTagsEnabledForPlayer(playerUuid)) {
+            LogUtils.debug("Tags desabilitadas individualmente para jogador " + playerUuid);
             return "";
         }
 
         try {
+            LogUtils.debug("Buscando tag permanente para jogador " + playerUuid);
             Optional<PlayerTag> seasonTag = plugin.getDatabaseManager().getAdapter().getActivePlayerTag(playerUuid, TagType.SEASON);
             if (seasonTag.isPresent()) {
-                return seasonTag.get().getFormattedTag();
+                String tag = seasonTag.get().getFormattedTag();
+                LogUtils.debug("✓ Tag permanente encontrada para jogador " + playerUuid + ": " + tag);
+                return tag;
+            } else {
+                LogUtils.debug("Nenhuma tag permanente encontrada para jogador " + playerUuid);
             }
             return "";
 
         } catch (Exception e) {
-            LogUtils.debug("Erro ao buscar tag permanente: " + e.getMessage());
+            LogUtils.error("Erro ao buscar tag permanente para jogador " + playerUuid + ": " + e.getMessage());
             return "";
         }
     }
@@ -607,23 +774,39 @@ public class TagManager {
      */
     private void giveSeasonTag(UUID playerUuid, int position, int seasonId, String formattedTag, String seasonName) {
         try {
+            LogUtils.debug("📝 Iniciando criação de tag permanente para jogador " + playerUuid);
+            LogUtils.debug("   📊 Dados: Posição=" + position + ", Temporada=" + seasonId + ", Tag=" + formattedTag);
+
             PlayerTag tag = new PlayerTag(playerUuid, position, seasonId, formattedTag, "SEASON_" + seasonId + "_" + position);
 
             if (!tag.isSeasonTag()) {
-                LogUtils.error("ERRO CRÍTICO: Tag não foi criada como SEASON! Tipo: " + tag.getTagType());
+                LogUtils.error("❌ ERRO CRÍTICO: Tag não foi criada como SEASON! Tipo: " + tag.getTagType());
                 return;
             }
 
-            LogUtils.debug("Criando tag permanente: Tipo=" + tag.getTagType() + ", Posição=" + position + ", Temporada=" + seasonId + ", Tag=" + formattedTag);
+            LogUtils.debug("✅ Tag criada corretamente - Tipo: " + tag.getTagType());
 
             boolean saved = plugin.getDatabaseManager().getAdapter().savePlayerTag(tag);
             if (!saved) {
-                LogUtils.error("ERRO: Falha ao salvar tag permanente no banco para jogador " + playerUuid);
+                LogUtils.error("❌ FALHA ao salvar tag permanente no banco para jogador " + playerUuid);
+                return;
+            }
+
+            LogUtils.debug("✅ Tag salva no banco de dados com sucesso");
+
+            Optional<PlayerTag> savedTag = plugin.getDatabaseManager().getAdapter().getActivePlayerTag(playerUuid, TagType.SEASON);
+            if (savedTag.isPresent() && savedTag.get().getSeasonNumber() == seasonId) {
+                LogUtils.debug("✅ Verificação de integridade: Tag encontrada no banco - Temporada " + savedTag.get().getSeasonNumber());
+            } else {
+                LogUtils.error("❌ ERRO DE INTEGRIDADE: Tag não encontrada no banco após salvamento!");
+                LogUtils.error("   📊 Esperado: Temporada " + seasonId + " | Encontrado: " +
+                        (savedTag.isPresent() ? "Temporada " + savedTag.get().getSeasonNumber() : "Nenhuma tag"));
                 return;
             }
 
             List<PlayerTag> playerTags = playerTagsCache.computeIfAbsent(playerUuid, k -> new ArrayList<>());
             playerTags.add(tag);
+            LogUtils.debug("✅ Cache atualizado");
 
             Player player = Bukkit.getPlayer(playerUuid);
             if (player != null) {
@@ -631,15 +814,15 @@ public class TagManager {
                         .replace("{tag}", formattedTag)
                         .replace("{temporada}", seasonName);
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
-                LogUtils.info("Tag permanente notificada para jogador online: " + player.getName() + " - " + formattedTag);
+                LogUtils.info("🎉 Jogador ONLINE notificado: " + player.getName() + " - Tag: " + formattedTag);
             } else {
-                LogUtils.debug("Tag permanente salva para jogador offline: " + playerUuid + " - " + formattedTag);
+                LogUtils.debug("💾 Jogador OFFLINE - tag salva no banco para acesso futuro");
             }
 
-            LogUtils.info("✅ Tag de temporada PERMANENTE concedida: " + formattedTag + " para jogador " + playerUuid + " (Tipo: " + tag.getTagType() + ")");
+            LogUtils.debug("🏆 Tag permanente concedida com SUCESSO: " + formattedTag + " para jogador " + playerUuid);
 
         } catch (Exception e) {
-            LogUtils.error("Erro ao conceder tag de temporada para jogador " + playerUuid + ": " + e.getMessage());
+            LogUtils.error("❌ ERRO CRÍTICO ao conceder tag de temporada para jogador " + playerUuid + ": " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -688,7 +871,7 @@ public class TagManager {
      * Obtém o valor vazio de um placeholder
      */
     private String getEmptyValue(String placeholderKey) {
-        for (String key : Objects.requireNonNull(tagsConfig.getConfigurationSection("placeholders")).getKeys(false)) {
+        for (String key : tagsConfig.getConfigurationSection("placeholders").getKeys(false)) {
             String placeholder = tagsConfig.getString("placeholders." + key + ".placeholder");
             if (placeholderKey.equals(placeholder)) {
                 return tagsConfig.getString("placeholders." + key + ".vazio", "");

@@ -1,22 +1,9 @@
 # ============================================
 # ARQUIVO DE MENSAGENS - HLIGA PLUGIN
 # ============================================
-# 
-# COMO EDITAR:
-# - Altere apenas o texto após os dois pontos (:)
-# - Para linhas múltiplas use o formato de lista (- "texto")
-# - Para linha em branco use: - ""
-#
-# CÓDIGOS DE COR:
-# &0=Preto &1=Azul escuro &2=Verde &3=Ciano &4=Vermelho &5=Roxo
-# &6=Dourado &7=Cinza claro &8=Cinza &9=Azul claro &a=Verde claro
-# &b=Azul água &c=Vermelho claro &d=Rosa &e=Amarelo &f=Branco
-#
-# FORMATAÇÃO:
-# &l=Negrito &o=Itálico &n=Sublinhado &m=Riscado &k=Mágico &r=Reset
 #
 # VARIÁVEIS:
-# {clan} {pontos} {jogador} {posicao} etc. - São substituídas automaticamente
+# {clan} {pontos} {jogador} {posicao} - São substituídas automaticamente
 # ============================================
 
 # ============================
@@ -64,9 +51,6 @@ ajuda:
     - "  &7• &c/liga reload &8- &7Recarregar plugin"
     - "  &7• &c/liga addpoints <clã> <pontos> &8- &7Adicionar pontos"
     - "  &7• &c/liga removepoints <clã> <pontos> &8- &7Remover pontos"
-    - "  &7• &c/liga season start <nome> <dias> &8- &7Iniciar temporada"
-    - "  &7• &c/liga season end &8- &7Encerrar temporada"
-    - "  &7• &c/liga season info &8- &7Info da temporada"
     - "  &7• &c/liga topnpc create <id> <pos> &8- &7Criar NPC ranking"
     - "  &7• &c/liga topnpc remove <id> &8- &7Remover NPC"
     - "  &7• &c/liga sync <origem> <destino> &8- &7Sincronizar dados"
@@ -427,14 +411,6 @@ npcs:
     - "&7• &f/liga topnpc list &8- &7Listar NPCs"
     - "&7• &f/liga topnpc update [id] &8- &7Atualizar NPCs"
     - ""
-
-
-
-
-
-
-
-
 
 # Mensagens especiais para posições no ranking
 mensagens_especiais:

@@ -1,12 +1,12 @@
 # Configuração principal do plugin hLiga
-# Sistema de ligas para clãs com suporte a SimpleClans
+# Sistema de ligas para clãs com suporte a SimpleClans e LeafGuids
 
 # Configurações de sistema e debug
 sistema:
   # Ativar mensagens de debug no console (true para ativar, false para desativar)
-  debug: true
+  debug: false
   # Nível de verbosidade das mensagens de log (1 = mínimo, 2 = normal, 3 = detalhado)
-  log_level: 3
+  log_level: 1
 
 # Configurações do banco de dados
 database:
@@ -82,16 +82,16 @@ temporada:
 # Configurações do Discord
 discord:
   # Ativar integração com Discord
-  ativado: true
+  ativado: false
 
   # === WEBHOOKS SEPARADOS ===
   # URL do webhook principal para temporadas (formato: https://discord.com/api/webhooks/ID/TOKEN)
   # Obtenha esta URL no Discord: Configurações do Servidor -> Integrações -> Webhooks -> Novo Webhook
-  webhook_url: "https://discord.com/api/webhooks/1366196882170183701/rvWph-_4kSwGq0vXX_lkA_CA0sXq83hBaK_za70P1jGBfgtrstgQdgwTBLv8PLFBH3SX"
+  webhook_url: " https://discord.com/api/webhooks/ID/TOKEN"
 
   # URL do webhook para logs de pontos (apenas staff)
   # Este webhook será usado apenas para notificações de pontos adicionados/removidos
-  staff_webhook_url: "https://discord.com/api/webhooks/1371950964017336352/rI9rfypxJPGHqjo71kw0k4TNfVvuAJWsBiH1LN3mnmLWGhR4se3z6KkXSCC0Kzbnc_a6"
+  staff_webhook_url: " https://discord.com/api/webhooks/ID/TOKEN"
 
   # Nome do bot no Discord (o nome que aparecerá quando enviar mensagens)
   bot_name: "hLiga"

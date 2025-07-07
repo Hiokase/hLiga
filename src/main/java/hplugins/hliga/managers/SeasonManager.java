@@ -5,12 +5,14 @@ import hplugins.hliga.models.Season;
 import hplugins.hliga.utils.LogUtils;
 import hplugins.hliga.utils.NotificationUtils;
 import hplugins.hliga.utils.TimeUtils;
+import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
+import java.util.logging.Level;
 
 public class SeasonManager {
 
@@ -152,8 +154,47 @@ public class SeasonManager {
         LogUtils.info("Iniciando finalização da temporada: " + activeSeason.name);
 
         List<hplugins.hliga.models.ClanPoints> finalRanking = plugin.getPointsManager().getTopClans(10);
+        LogUtils.debug("Ranking final obtido: " + finalRanking.size() + " clãs");
 
-        boolean hasValidWinners = finalRanking.stream().anyMatch(clan -> clan.getPoints() > 0);
+        for (int i = 0; i < finalRanking.size(); i++) {
+            hplugins.hliga.models.ClanPoints cp = finalRanking.get(i);
+            if (cp != null) {
+                LogUtils.debug("  " + (i+1) + "º lugar: " + cp.getClanTag() + " com " + cp.getPoints() + " pontos");
+            }
+        }
+
+        int positionsRewarded = plugin.getConfigManager().getTagsConfig().getInt("tags_temporada.posicoes_premiadas", 3);
+        boolean hasValidWinners = false;
+
+        LogUtils.info("=== VERIFICAÇÃO DE GANHADORES VÁLIDOS ===");
+        LogUtils.info("Posições premiadas configuradas: " + positionsRewarded);
+        LogUtils.info("Total de clãs no ranking: " + finalRanking.size());
+
+        for (int i = 0; i < Math.min(finalRanking.size(), positionsRewarded); i++) {
+            hplugins.hliga.models.ClanPoints cp = finalRanking.get(i);
+            if (cp != null) {
+                LogUtils.info("Verificando posição " + (i+1) + ": Clã " + cp.getClanTag() + " com " + cp.getPoints() + " pontos");
+                if (cp.getPoints() > 0) {
+                    hasValidWinners = true;
+                    LogUtils.info("✓ Ganhador válido encontrado na posição " + (i+1) + ": " + cp.getClanTag());
+                }
+            } else {
+                LogUtils.warning("ClanPoints nulo encontrado na posição " + (i+1));
+            }
+        }
+
+        final boolean hasValidWinnersFinaal = hasValidWinners; // Para usar em lambda
+        LogUtils.info("RESULTADO: Ganhadores válidos encontrados: " + hasValidWinnersFinaal);
+        LogUtils.info("============================================");
+
+        if (plugin.getTagManager() != null && plugin.getTagManager().isSystemEnabled()) {
+            if (hasValidWinners) {
+                plugin.getTagManager().distributeSeasonTags(activeSeason);
+                LogUtils.info("Tags de temporada distribuídas para a temporada: " + activeSeason.name);
+            } else {
+                LogUtils.info("Nenhum ganhador válido encontrado - tags de temporada NÃO distribuídas para: " + activeSeason.name);
+            }
+        }
 
         LogUtils.info("Enviando notificações de fim de temporada...");
 
@@ -163,19 +204,8 @@ public class SeasonManager {
         plugin.getLigaManager().sendDiscordSeasonEnd(activeSeason, finalRanking);
         LogUtils.info("Notificação de fim de temporada enviada para Discord");
 
-        if (plugin.getTagManager() != null && plugin.getTagManager().isSystemEnabled()) {
-            if (hasValidWinners) {
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    plugin.getTagManager().distributeSeasonTags(activeSeason);
-                    LogUtils.info("Tags de temporada distribuídas para a temporada: " + activeSeason.name);
-                }, 40L); // 2 segundos
-            } else {
-                LogUtils.info("Nenhum ganhador válido encontrado - tags de temporada NÃO distribuídas para: " + activeSeason.name);
-            }
-        }
-
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (hasValidWinners) {
+            if (hasValidWinnersFinaal) {
                 boolean rewardsDistributed = plugin.getRewardManager().distributeRewards();
                 if (rewardsDistributed) {
                     LogUtils.info("Recompensas distribuídas com sucesso");

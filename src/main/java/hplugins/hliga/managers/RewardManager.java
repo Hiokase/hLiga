@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class RewardManager {
 
@@ -96,6 +97,9 @@ public class RewardManager {
         distributeSpecialRewards();
 
         distributeParticipationRewards();
+
+        // Isso é importante caso o RewardManager seja chamado independentemente
+        ensureSeasonTagsDistributed();
 
 
         return true;
@@ -265,6 +269,49 @@ public class RewardManager {
         }
 
         return anyRewardGiven;
+    }
+
+    /**
+     * Garante que as tags permanentes sejam distribuídas junto com os prêmios
+     * CRÍTICO: Previne situação onde prêmios são dados mas tags não
+     */
+    private void ensureSeasonTagsDistributed() {
+        try {
+            Season currentSeason = plugin.getSeasonManager().getCurrentSeason();
+            if (currentSeason == null) {
+                plugin.getLogger().info("RewardManager: Nenhuma temporada ativa - não distribuindo tags");
+                return;
+            }
+
+            if (plugin.getTagManager() == null || !plugin.getTagManager().isSystemEnabled()) {
+                plugin.getLogger().info("RewardManager: Sistema de tags desabilitado - não distribuindo tags");
+                return;
+            }
+
+            int positionsRewarded = plugin.getConfigManager().getTagsConfig().getInt("tags_temporada.posicoes_premiadas", 3);
+            List<ClanPoints> topClans = plugin.getPointsManager().getTopClans(positionsRewarded);
+
+            boolean hasValidWinners = false;
+            for (int i = 0; i < Math.min(topClans.size(), positionsRewarded); i++) {
+                ClanPoints cp = topClans.get(i);
+                if (cp != null && cp.getPoints() > 0) {
+                    hasValidWinners = true;
+                    break;
+                }
+            }
+
+            if (!hasValidWinners) {
+                plugin.getLogger().info("RewardManager: Nenhum ganhador válido encontrado - não distribuindo tags");
+                return;
+            }
+
+            plugin.getLogger().info("RewardManager: Garantindo distribuição de tags permanentes para temporada: " + currentSeason.name);
+            plugin.getTagManager().distributeSeasonTags(currentSeason);
+
+        } catch (Exception e) {
+            plugin.getLogger().warning("RewardManager: Erro ao garantir distribuição de tags: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**

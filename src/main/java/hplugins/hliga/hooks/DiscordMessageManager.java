@@ -37,14 +37,14 @@ public class DiscordMessageManager {
         File configFile = new File(plugin.getDataFolder(), "discord.json");
 
         if (!configFile.exists()) {
-            LogUtils.info("Arquivo discord.json não encontrado, criando a partir dos recursos...");
+            LogUtils.debugMedium("Arquivo discord.json não encontrado, criando a partir dos recursos...");
             try {
                 if (!plugin.getDataFolder().exists()) {
                     plugin.getDataFolder().mkdirs();
                 }
 
                 plugin.saveResource("discord.json", false);
-                LogUtils.info("Arquivo discord.json criado com sucesso em: " + configFile.getAbsolutePath());
+                LogUtils.debugMedium("Arquivo discord.json criado com sucesso em: " + configFile.getAbsolutePath());
             } catch (Exception e) {
                 LogUtils.warning("Erro ao criar arquivo discord.json: " + e.getMessage());
                 messagesConfig = null;
@@ -54,46 +54,46 @@ public class DiscordMessageManager {
 
         try {
             String content = readFileContent(configFile);
-            LogUtils.info("=== CARREGANDO DISCORD.JSON ===");
-            LogUtils.info("Arquivo: " + configFile.getAbsolutePath());
-            LogUtils.info("Existe: " + configFile.exists());
-            LogUtils.info("Tamanho: " + content.length() + " caracteres");
-            LogUtils.info("Últimas modificações: " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date(configFile.lastModified())));
+            LogUtils.debugMedium("=== CARREGANDO DISCORD.JSON ===");
+            LogUtils.debugMedium("Arquivo: " + configFile.getAbsolutePath());
+            LogUtils.debugMedium("Existe: " + configFile.exists());
+            LogUtils.debugMedium("Tamanho: " + content.length() + " caracteres");
+            LogUtils.debugMedium("Últimas modificações: " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date(configFile.lastModified())));
 
             JsonParser parser = new JsonParser();
             this.messagesConfig = parser.parse(content).getAsJsonObject();
 
-            LogUtils.info("JSON parseado com sucesso. Seções encontradas:");
+            LogUtils.debugMedium("JSON parseado com sucesso. Seções encontradas:");
 
             if (messagesConfig.has("embed_nova_temporada")) {
                 JsonObject config = messagesConfig.getAsJsonObject("embed_nova_temporada");
                 boolean ativo = config.has("ativo") ? config.get("ativo").getAsBoolean() : false;
                 String titulo = config.has("titulo") ? config.get("titulo").getAsString() : "NÃO DEFINIDO";
                 String descricao = config.has("descricao") ? config.get("descricao").getAsString() : "NÃO DEFINIDO";
-                LogUtils.info("- embed_nova_temporada: " + (ativo ? "ATIVO" : "INATIVO"));
-                LogUtils.info("  └─ Título: " + titulo);
-                LogUtils.info("  └─ Descrição: " + (descricao.length() > 50 ? descricao.substring(0, 50) + "..." : descricao));
+                LogUtils.debugMedium("- embed_nova_temporada: " + (ativo ? "ATIVO" : "INATIVO"));
+                LogUtils.debugMedium("  └─ Título: " + titulo);
+                LogUtils.debugMedium("  └─ Descrição: " + (descricao.length() > 50 ? descricao.substring(0, 50) + "..." : descricao));
             }
 
             if (messagesConfig.has("embed_fim_temporada")) {
                 JsonObject config = messagesConfig.getAsJsonObject("embed_fim_temporada");
                 boolean ativo = config.has("ativo") ? config.get("ativo").getAsBoolean() : false;
-                LogUtils.info("- embed_fim_temporada: " + (ativo ? "ATIVO" : "INATIVO"));
+                LogUtils.debugMedium("- embed_fim_temporada: " + (ativo ? "ATIVO" : "INATIVO"));
             }
 
             if (messagesConfig.has("embed_pontos_adicionados")) {
                 JsonObject config = messagesConfig.getAsJsonObject("embed_pontos_adicionados");
                 boolean ativo = config.has("ativo") ? config.get("ativo").getAsBoolean() : false;
-                LogUtils.info("- embed_pontos_adicionados: " + (ativo ? "ATIVO" : "INATIVO"));
+                LogUtils.debugMedium("- embed_pontos_adicionados: " + (ativo ? "ATIVO" : "INATIVO"));
             }
 
             if (messagesConfig.has("embed_pontos_removidos")) {
                 JsonObject config = messagesConfig.getAsJsonObject("embed_pontos_removidos");
                 boolean ativo = config.has("ativo") ? config.get("ativo").getAsBoolean() : false;
-                LogUtils.info("- embed_pontos_removidos: " + (ativo ? "ATIVO" : "INATIVO"));
+                LogUtils.debugMedium("- embed_pontos_removidos: " + (ativo ? "ATIVO" : "INATIVO"));
             }
 
-            LogUtils.info("=== FIM CARREGAMENTO DISCORD.JSON ===");
+            LogUtils.debugMedium("=== FIM CARREGAMENTO DISCORD.JSON ===");
 
         } catch (Exception e) {
             LogUtils.warning("Erro ao carregar configuração Discord: " + e.getMessage());
@@ -106,7 +106,7 @@ public class DiscordMessageManager {
      * Recarrega as configurações do discord.json
      */
     public void reloadConfig() {
-        LogUtils.info("Recarregando configurações do discord.json...");
+        LogUtils.debugMedium("Recarregando configurações do discord.json...");
         loadMessagesConfig();
     }
 
@@ -129,19 +129,19 @@ public class DiscordMessageManager {
      * Cria um embed para início de temporada
      */
     public DiscordWebhook.WebhookEmbed createSeasonStartEmbed(Season season) {
-        LogUtils.info("=== CRIANDO EMBED NOVA TEMPORADA ===");
-        LogUtils.info("messagesConfig disponível: " + (messagesConfig != null));
+        LogUtils.debugMedium("=== CRIANDO EMBED NOVA TEMPORADA ===");
+        LogUtils.debugMedium("messagesConfig disponível: " + (messagesConfig != null));
 
         if (messagesConfig != null && messagesConfig.has("embed_nova_temporada")) {
-            LogUtils.info("Configuração embed_nova_temporada encontrada, processando...");
+            LogUtils.debugMedium("Configuração embed_nova_temporada encontrada, processando...");
             try {
                 JsonObject config = messagesConfig.getAsJsonObject("embed_nova_temporada");
 
                 boolean ativo = config.has("ativo") ? config.get("ativo").getAsBoolean() : false;
-                LogUtils.info("Embed ativo: " + ativo);
+                LogUtils.debugMedium("Embed ativo: " + ativo);
 
                 if (!ativo) {
-                    LogUtils.info("Embed desativado, usando configuração padrão");
+                    LogUtils.debugMedium("Embed desativado, usando configuração padrão");
                     return createDefaultSeasonStartEmbed(season);
                 }
 
@@ -149,23 +149,23 @@ public class DiscordMessageManager {
 
                 String titulo = config.has("titulo") ?
                         config.get("titulo").getAsString() : "🏆 Nova Temporada Iniciada!";
-                LogUtils.info("Título configurado: " + titulo);
+                LogUtils.debugMedium("Título configurado: " + titulo);
                 builder.title(titulo);
 
                 String descricao = config.has("descricao") ?
                         config.get("descricao").getAsString() : "A temporada **{nome_temporada}** começou!";
-                LogUtils.info("Descrição original: " + (descricao.length() > 100 ? descricao.substring(0, 100) + "..." : descricao));
+                LogUtils.debugMedium("Descrição original: " + (descricao.length() > 100 ? descricao.substring(0, 100) + "..." : descricao));
                 descricao = replacePlaceholders(descricao, season, null, null, null);
-                LogUtils.info("Descrição final: " + (descricao.length() > 100 ? descricao.substring(0, 100) + "..." : descricao));
+                LogUtils.debugMedium("Descrição final: " + (descricao.length() > 100 ? descricao.substring(0, 100) + "..." : descricao));
                 builder.description(descricao);
 
                 int cor = config.has("cor") ? config.get("cor").getAsInt() : 65280;
-                LogUtils.info("Cor configurada: " + cor);
+                LogUtils.debugMedium("Cor configurada: " + cor);
                 builder.color(cor);
 
                 if (config.has("thumbnail") && !config.get("thumbnail").getAsString().isEmpty()) {
                     String thumbnail = config.get("thumbnail").getAsString();
-                    LogUtils.info("Thumbnail configurado: " + thumbnail);
+                    LogUtils.debugMedium("Thumbnail configurado: " + thumbnail);
                     builder.thumbnail(thumbnail);
                 }
 
@@ -197,10 +197,10 @@ public class DiscordMessageManager {
 
                 String rodape = config.has("rodape") ?
                         config.get("rodape").getAsString() : "hLiga - Sistema de Ligas de Clãs";
-                LogUtils.info("Rodapé configurado: " + rodape);
+                LogUtils.debugMedium("Rodapé configurado: " + rodape);
                 builder.footer(rodape);
 
-                LogUtils.info("=== EMBED NOVA TEMPORADA CRIADO COM SUCESSO ===");
+                LogUtils.debugMedium("=== EMBED NOVA TEMPORADA CRIADO COM SUCESSO ===");
                 return builder.build();
 
             } catch (Exception e) {

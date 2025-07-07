@@ -1,13 +1,11 @@
 package hplugins.hliga.hooks.providers;
 
-import com.leafplugins.products.leafguilds.platform.commons.LeafGuildsAPI;
 import com.leafplugins.products.leafguilds.platform.commons.objects.Guild;
 import com.leafplugins.products.leafguilds.platform.commons.objects.Member;
 import hplugins.hliga.Main;
 import hplugins.hliga.hooks.BaseClanProvider;
 import hplugins.hliga.models.GenericClan;
 import hplugins.hliga.utils.LogUtils;
-import net.sacredlabyrinth.phaed.simpleclans.SimpleClans;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -104,7 +102,7 @@ public class LeafGuildsHook extends BaseClanProvider {
                 }
             }
 
-            plugin.getLogger().info("LeafGuildsHook - getAllClanTags: Número de guildas encontradas: " + guilds.size());
+            LogUtils.debug("LeafGuildsHook - getAllClanTags: Número de guildas encontradas: " + guilds.size());
 
             List<String> tags = new ArrayList<>();
             for (Guild guild : guilds) {
